@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Générateur - Gabarits de Proportionnalité</title>
+    <style>
+        :root { --border: #000; --bg-top: #fffde7; --bg-bottom: #e1f5fe; --fill-color: #f39c12; }
+        body { font-family: 'Arial', sans-serif; margin: 0; display: flex; background: #f4f4f4; }
+        
+        #config { width: 350px; background: white; border-right: 2px solid #ccc; padding: 20px; height: 100vh; position: sticky; top: 0; }
+        .group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        select, input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #aaa; }
+        
+        button { width: 100%; padding: 12px; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .btn-gen { background: #27ae60; }
+        .btn-ans { background: #2980b9; }
+        .btn-board { background: #8e44ad; }
+
+        #main { flex: 1; padding: 30px; display: flex; flex-direction: column; align-items: center; transition: all 0.3s; }
+        
+        /* Mode Tableau */
+        body.board-mode #config { display: none; }
+        body.board-mode .problem-card { max-width: 95%; padding: 50px; border-width: 3px; }
+        body.board-mode .text-problem { font-size: 2.5rem; }
+        body.board-mode .row-top, body.board-mode .row-bottom { height: 120px; border-width: 4px; }
+        body.board-mode .answer { font-size: 2rem; }
+
+        .problem-card { 
+            background: white; border: 1.5px solid #000; width: 100%; max-width: 750px; 
+            padding: 25px; margin-bottom: 30px; page-break-inside: avoid; position: relative;
+        }
+        
+        .text-problem { font-size: 1.2rem; margin-bottom: 25px; line-height: 1.5; color: #111; }
+
+        .gabarit { width: 100%; margin-top: 10px; }
+        .row-top { 
+            width: 100%; height: 65px; border: 2px solid var(--border); 
+            background: var(--bg-top); margin-bottom: 8px;
+        }
+        .row-bottom { 
+            width: 100%; height: 65px; 
+            border: 2px solid var(--border); background: var(--bg-bottom);
+            position: relative; overflow: hidden;
+        }
+        
+        .fill-bar {
+            position: absolute; top: 0; left: 0; height: 100%;
+            background-color: var(--fill-color);
+            width: 0%; transition: width 0.5s ease-in-out;
+            display: none;
+        }
+
+        .grid-tick {
+            position: absolute; top: 70%; bottom: 0;
+            border-left: 1.5px solid #000; pointer-events: none;
+            z-index: 2;
+        }
+
+        .answer { margin-top: 15px; color: #d35400; font-weight: bold; display: none; font-size: 0.9rem; border-top: 1px dashed #ccc; padding-top: 10px; }
+
+        .close-board { display: none; position: fixed; top: 20px; right: 20px; background: #e74c3c; padding: 10px 20px; z-index: 100; border-radius: 5px;}
+        body.board-mode .close-board { display: block; }
+
+        @media print {
+            #config, .close-board { display: none !important; }
+            body { background: white; }
+            .row-top, .row-bottom { background: white !important; }
+            .fill-bar { -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="config">
+    <h2>Paramètres</h2>
+    <div class="group">
+        <label>Type de nombres :</label>
+        <select id="numType">
+            <option value="int">Entiers uniquement</option>
+            <option value="dec">Avec décimaux</option>
+        </select>
+    </div>
+    <div class="group">
+        <label>Objectif :</label>
+        <select id="probGoal">
+            <option value="mix">Mélange total</option>
+            <option value="part">Calculer la partie</option>
+            <option value="pct">Trouver le %</option>
+            <option value="total">Trouver le tout</option>
+        </select>
+    </div>
+    <div class="group">
+        <label>Nombre d'exercices :</label>
+        <input type="number" id="nbProb" value="3" min="1" max="10">
+    </div>
+    <button class="btn-gen" onclick="generate()">🔄 Générer les fiches</button>
+    <button class="btn-ans" onclick="toggleAnswers()">👁️ Voir les solutions</button>
+    <button class="btn-board" onclick="toggleBoardMode()">📺 Mode Tableau (Projection)</button>
+    <button style="background:#7f8c8d" onclick="window.print()">🖨️ Imprimer</button>
+</div>
+
+<button class="close-board" onclick="toggleBoardMode()">❌ Quitter le mode tableau</button>
+
+<div id="main">
+    <div id="list"></div>
+</div>
+
+<script>
+let showAns = false;
+let lastPct = null;
+let lastAns = null;
+
+const refPcts = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90];
+
+const scenarios = {
+    part: [
+        { t: "Un smartphone coûte {total}€. Pendant les soldes, il y a une remise de {pct}%. Quel est le montant de la réduction ?", u: "€" },
+        { t: "Une batterie de vélo a une capacité totale de {total} Wh. Elle est actuellement chargée à {pct}%. Combien de Wh reste-t-il ?", u: "Wh" },
+        { t: "Dans une école de {total} élèves, {pct}% pratiquent un sport en club. Combien d'élèves cela représente-t-il ?", u: "élèves" },
+        { t: "Un réservoir contient {total} L d'eau. On en utilise {pct}% pour arroser le jardin. Quel volume a été utilisé ?", u: "L" }
+    ],
+    pct: [
+        { t: "Une tablette de chocolat pèse {total}g. On a mangé un morceau de {part}g. Quel pourcentage du total a été consommé ?", u: "%" },
+        { t: "Sur un trajet total de {total} km, un cycliste a déjà parcouru {part} km. Quel pourcentage du trajet a-t-il effectué ?", u: "%" },
+        { t: "Une gourde de {total}ml contient {part}ml de jus d'orange. Quel est le pourcentage de jus dans la gourde ?", u: "%" },
+        { t: "Dans un sachet de {total} bonbons, {part} sont rouges. Quel est le pourcentage de bonbons rouges ?", u: "%" }
+    ],
+    total: [
+        { t: "Le réservoir d'une voiture contient {part} litres, ce qui correspond à {pct}% de sa capacité. Quel est le volume total ?", u: "L" },
+        { t: "Un randonneur a marché {part} mètres, soit {pct}% de son parcours prévu. Quelle est la distance totale de sa marche ?", u: "m" },
+        { t: "Une clé USB contient {part} Go de photos, ce qui occupe {pct}% de sa mémoire. Quelle est la capacité totale de la clé ?", u: "Go" },
+        { t: "Une place de cinéma coûte {part}€ après une réduction de {pct}%. Quel était le prix d'origine ?", u: "€" }
+    ]
+};
+
+function generate() {
+    const list = document.getElementById('list');
+    const nb = document.getElementById('nbProb').value;
+    list.innerHTML = "";
+    showAns = false;
+    lastPct = null;
+    lastAns = null;
+    for(let i=0; i<nb; i++) create(list);
+}
+
+function create(container) {
+    const isDec = document.getElementById('numType').value === 'dec';
+    const goal = document.getElementById('probGoal').value;
+    const type = goal === 'mix' ? ['part','pct','total'][Math.floor(Math.random()*3)] : goal;
+    
+    let pct, total, part, reponseVal;
+    
+    // Boucle pour éviter les doublons consécutifs
+    do {
+        pct = refPcts[Math.floor(Math.random()*refPcts.length)];
+        total = isDec ? (Math.floor(Math.random() * 150) + 20) : (Math.floor(Math.random() * 40) * 10 + 100);
+        
+        if(pct % 25 === 0) total = Math.ceil(total/4)*4;
+        else if(pct % 20 === 0) total = Math.ceil(total/5)*5;
+        else if(pct % 10 === 0) total = Math.ceil(total/10)*10;
+        
+        part = parseFloat(((pct / 100) * total).toFixed(2));
+        reponseVal = (type === 'part' ? part : (type === 'pct' ? pct : total));
+    } while (pct === lastPct || reponseVal === lastAns);
+
+    lastPct = pct;
+    lastAns = reponseVal;
+
+    const scene = scenarios[type][Math.floor(Math.random()*scenarios[type].length)];
+    let enonce = scene.t.replace("{total}", total).replace("{pct}", pct).replace("{part}", part);
+    let reponseLabel = (type === 'part' ? part : (type === 'pct' ? pct + "%" : total)) + " " + (type === 'pct' ? "" : scene.u);
+
+    let ticksHTML = "";
+    for(let i = 5; i < 100; i += 5) {
+        ticksHTML += `<div class="grid-tick" style="left: ${i}%"></div>`;
+    }
+
+    const card = document.createElement('div');
+    card.className = 'problem-card';
+    card.innerHTML = `
+        <div class="text-problem">${enonce}</div>
+        <div class="gabarit">
+            <div class="row-top"></div>
+            <div class="row-bottom">
+                <div class="fill-bar" style="width: ${pct}%"></div>
+                ${ticksHTML}
+            </div>
+        </div>
+        <div class="answer">Solution : ${reponseLabel}</div>
+    `;
+    container.appendChild(card);
+}
+
+function toggleAnswers() {
+    showAns = !showAns;
+    document.querySelectorAll('.answer').forEach(a => a.style.display = showAns ? 'block' : 'none');
+    document.querySelectorAll('.fill-bar').forEach(f => f.style.display = showAns ? 'block' : 'none');
+}
+
+function toggleBoardMode() {
+    document.body.classList.toggle('board-mode');
+    window.scrollTo(0,0);
+}
+
+generate();
+</script>
+</body>
+</html>
