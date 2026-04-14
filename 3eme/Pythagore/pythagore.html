@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Entraînement Pythagore - Medi09</title>
+    <style>
+        :root { --primary: #2c3e50; --accent: #e74c3c; --success: #27ae60; --light: #ecf0f1; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 700px; width: 100%; text-align: center; }
+        h1 { color: var(--primary); margin-bottom: 20px; }
+        .mode-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .mode-btn { padding: 10px 15px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .mode-btn.active { background: var(--primary); color: white; }
+        .sub-options { margin-bottom: 20px; padding: 10px; background: var(--light); border-radius: 8px; display: none; }
+        .sub-options label { margin: 0 10px; cursor: pointer; font-size: 0.9rem; }
+        #svg-container { margin: 20px 0; background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 20px; display: flex; justify-content: center; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        button.action { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-gen { background: var(--accent); color: white; }
+        .btn-ans { background: var(--success); color: white; }
+        .enonce { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; text-align: left; border-left: 5px solid var(--primary); padding-left: 15px; min-height: 80px; }
+        .solution { display: none; margin-top: 20px; padding: 15px; background: #e8f6ef; border-radius: 10px; text-align: left; border: 1px solid var(--success); font-family: 'Segoe UI', sans-serif; }
+        .triangle-path { fill: #f9f9f9; stroke: var(--primary); stroke-width: 3; stroke-linejoin: round; }
+        .label { font-weight: bold; font-size: 16px; fill: var(--primary); }
+        .measure { fill: #d35400; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1>📐 Entraînement Pythagore</h1>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('theoreme', this)">Théorème</button>
+        <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
+        <button class="mode-btn" onclick="setMode('mixte', this)">Mode Mixte</button>
+    </div>
+
+    <div id="theoreme-options" class="sub-options" style="display: block;">
+        <strong>Chercher :</strong>
+        <label><input type="radio" name="calcType" value="hypo" checked> L'hypoténuse</label>
+        <label><input type="radio" name="calcType" value="cote"> Un côté de l'angle droit</label>
+        <label><input type="radio" name="calcType" value="aleatoire"> Aléatoire</label>
+    </div>
+
+    <div class="controls">
+        <button class="action btn-gen" onclick="generate()">🔄 Générer l'exercice</button>
+        <button class="action btn-ans" onclick="toggleSolution()">👁️ Voir le corrigé</button>
+    </div>
+
+    <div id="svg-container">
+        <svg id="triangle-svg" width="400" height="250" viewBox="0 0 400 250"></svg>
+    </div>
+
+    <div id="enonce" class="enonce">Choisissez vos options et cliquez sur Générer.</div>
+    <div id="solution" class="solution"></div>
+</div>
+
+<script>
+let currentMode = 'theoreme';
+let currentTask = {};
+
+function setMode(mode, btn) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('theoreme-options').style.display = (mode === 'theoreme') ? 'block' : 'none';
+}
+
+function generate() {
+    document.getElementById('solution').style.display = 'none';
+    let type;
+    if (currentMode === 'theoreme') {
+        const choice = document.querySelector('input[name="calcType"]:checked').value;
+        if (choice === 'aleatoire') type = Math.random() > 0.5 ? 'hypotenuse' : 'cote';
+        else type = (choice === 'hypo') ? 'hypotenuse' : 'cote';
+    } else if (currentMode === 'reciproque') {
+        type = 'reciproque';
+    } else {
+        const types = ['hypotenuse', 'cote', 'reciproque'];
+        type = types[Math.floor(Math.random() * types.length)];
+    }
+
+    let a = Math.floor(Math.random() * 6) + 4; // Côté 1
+    let b = Math.floor(Math.random() * 6) + 4; // Côté 2
+    let c = Math.sqrt(a*a + b*b);
+    
+    if (type === 'hypotenuse') {
+        setupHypotenuse(a, b, c.toFixed(1));
+    } else if (type === 'cote') {
+        let hyp = Math.max(a, b) + Math.floor(Math.random() * 3) + 2;
+        let diff = Math.sqrt(hyp*hyp - a*a).toFixed(1);
+        setupCote(a, diff, hyp);
+    } else {
+        const isRight = Math.random() > 0.5;
+        let c_recip = isRight ? c : c + (Math.random() > 0.5 ? 1.5 : -1.2);
+        setupReciproque(a, b, c_recip.toFixed(1));
+    }
+}
+
+function setupHypotenuse(a, b, c) {
+    currentTask = {
+        enonce: `Le triangle ABC est rectangle en A tel que AB = ${a} cm et AC = ${b} cm.<br><strong>Calcule la longueur BC au dixième près.</strong>`,
+        sol: `Dans le triangle ABC rectangle en A, d'après le théorème de Pythagore :<br>BC² = AB² + AC²<br>BC² = ${a}² + ${b}² = ${a*a} + ${b*b}<br>BC² = ${a*a + b*b}<br>BC = √${a*a + b*b} ≈ <b>${c} cm</b>`
+    };
+    drawTriangle(a, b, "?", "A", "B", "C", true);
+    updateUI();
+}
+
+function setupCote(a, b, c) {
+    currentTask = {
+        enonce: `Le triangle DEF est rectangle en D tel que l'hypoténuse EF = ${c} cm et DF = ${a} cm.<br><strong>Calcule la longueur DE au dixième près.</strong>`,
+        sol: `Dans le triangle DEF rectangle en D, d'après le théorème de Pythagore :<br>EF² = DE² + DF²<br>${c}² = DE² + ${a}²<br>${(c*c).toFixed(1)} = DE² + ${a*a}<br>DE² = ${(c*c).toFixed(1)} - ${a*a} = ${(c*c - a*a).toFixed(1)}<br>DE = √${(c*c - a*a).toFixed(1)} ≈ <b>${b} cm</b>`
+    };
+    drawTriangle(a, "?", c, "D", "F", "E", true);
+    updateUI();
+}
+
+function setupReciproque(a, b, c) {
+    const carres = (a*a + b*b).toFixed(1);
+    const hypCarre = (c*c).toFixed(1);
+    const isRight = Math.abs(carres - hypCarre) < 0.2;
+    currentTask = {
+        enonce: `Le triangle IJK a pour mesures : IJ = ${a} cm, IK = ${b} cm et JK = ${c} cm.<br><strong>Ce triangle est-il rectangle ?</strong>`,
+        sol: `Côté le plus long : JK² = ${c}² = ${hypCarre}<br>IJ² + IK² = ${a}² + ${b}² = ${carres}<br>${isRight ? `On constate que JK² = IJ² + IK². D'après la réciproque du théorème de Pythagore, le triangle <b>est rectangle</b>.` : `On constate que JK² ≠ IJ² + IK². L'égalité de Pythagore n'est pas vérifiée. Le triangle <b>n'est pas rectangle</b>.`}`
+    };
+    drawTriangle(a, b, c, "I", "J", "K", false);
+    updateUI();
+}
+
+function updateUI() {
+    document.getElementById('enonce').innerHTML = currentTask.enonce;
+    document.getElementById('solution').innerHTML = currentTask.sol;
+}
+
+function toggleSolution() {
+    const s = document.getElementById('solution');
+    s.style.display = s.style.display === 'block' ? 'none' : 'block';
+}
+
+function drawTriangle(a, b, c, p1, p2, p3, showRightAngle) {
+    const svg = document.getElementById('triangle-svg');
+    // Coordonnées de base pour un triangle visuel propre
+    const xA = 100, yA = 180;
+    const xB = 300, yB = 180;
+    const xC = 100, yC = 50;
+    
+    let rightAngle = "";
+    if (showRightAngle) {
+        rightAngle = `<path d="M 100 160 L 120 160 L 120 180" fill="none" stroke="#e74c3c" stroke-width="2"/>`;
+    }
+
+    svg.innerHTML = `
+        <path d="M ${xA} ${yA} L ${xB} ${yB} L ${xC} ${yC} Z" class="triangle-path" />
+        ${rightAngle}
+        <text x="${xA-20}" y="${yA+20}" class="label">${p1}</text>
+        <text x="${xB+10}" y="${yB+10}" class="label">${p2}</text>
+        <text x="${xC-10}" y="${yC-15}" class="label">${p3}</text>
+        <text x="${(xA+xB)/2}" y="${yA+25}" class="measure">${a} cm</text>
+        <text x="${xA-60}" y="${(yA+yC)/2}" class="measure">${b === '?' ? '?' : b + ' cm'}</text>
+        <text x="${(xB+xC)/2 + 10}" y="${(yB+yC)/2 - 10}" class="measure">${c === '?' ? '?' : c + ' cm'}</text>
+    `;
+}
+
+generate();
+</script>
+</body>
+</html>
