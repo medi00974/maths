@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Générateur de Splats - Équations Complexes</title>
+    <style>
+        :root { --splat-color: #1a1a1a; --splat-opp-color: #e74c3c; --primary: #3498db; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; background: #f0f2f5; overflow: hidden; }
+        
+        #config { width: 320px; background: white; border-right: 2px solid #ddd; padding: 20px; box-shadow: 5px 0 15px rgba(0,0,0,0.05); overflow-y: auto; z-index: 100; }
+        .group { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        label { display: block; font-weight: bold; font-size: 0.85rem; margin-bottom: 8px; color: #555; }
+        input, select { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2ecc71; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .btn-blue { background: #3498db; }
+        .btn-orange { background: #e67e22; }
+
+        #main { flex: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; transition: 0.3s; }
+        
+        .board { 
+            display: flex; background: white; border: 4px solid #333; border-radius: 20px; 
+            width: 100%; max-width: 800px; min-height: 350px; margin-bottom: 40px; 
+            position: relative; page-break-inside: avoid;
+        }
+        .side { flex: 1; padding: 20px; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: 15px; }
+        .divider { width: 0px; border-left: 4px solid #333; margin: 10px 0; }
+
+        .splat { 
+            width: 70px; height: 70px; background: var(--splat-color); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem;
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+        }
+        .splat.negative { background: var(--splat-opp-color); }
+        .splat::after { content: '?'; }
+        
+        .bille { 
+            width: 55px; height: 55px; border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; font-size: 1.3rem; border: 3px solid #555; background: #fff;
+        }
+        .ans-text { position: absolute; bottom: 10px; right: 20px; font-weight: bold; color: #e67e22; display: none; }
+
+        .projection-mode .board { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; max-width: none; border: none; border-radius: 0; margin: 0; z-index: 200; display: none; }
+        .projection-mode .board.active { display: flex; }
+        .projection-mode .splat { width: 120px; height: 120px; font-size: 2.5rem; }
+        .projection-mode .bille { width: 100px; height: 100px; font-size: 2.5rem; border-width: 5px; }
+        .proj-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 300; display: none; gap: 10px; }
+        .projection-mode .proj-nav { display: flex; }
+        .nav-btn { background: #333; padding: 15px 30px; border-radius: 50px; font-size: 1.2rem; color: white; border:none; cursor:pointer;}
+
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            #config, .proj-nav, button { display: none !important; }
+            body { background: white; display: block; overflow: visible; }
+            #main { padding: 0; display: block; }
+            .board { border: 4px solid black !important; box-shadow: none; margin-bottom: 50px; width: 100%; max-width: none; display: flex !important; flex-direction: row !important; }
+            .divider { border-left: 4px solid black !important; display: block !important; visibility: visible !important; }
+            .splat { background-color: black !important; }
+            .splat.negative { background-color: #e74c3c !important; border: 2px solid black; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="config">
+    <h2>Générateur de Splats</h2>
+    <div class="group">
+        <label>Nombre de taches Max :</label>
+        <input type="number" id="maxSplat" value="5">
+    </div>
+    <div class="group">
+        <label>Autoriser taches opposées (-x) :</label>
+        <select id="allowOpposite">
+            <option value="no">Non (ax + B = cx + D)</option>
+            <option value="yes">Oui (-ax + B = -cx + D)</option>
+        </select>
+    </div>
+    <div class="group">
+        <label>Nombre de billes Max :</label>
+        <input type="number" id="maxBilles" value="3">
+    </div>
+    <div class="group">
+        <label>Type de nombres :</label>
+        <select id="typeNombre">
+            <option value="entier">Entiers (0 à 9)</option>
+            <option value="relatif">Relatifs (-9 à 9)</option>
+        </select>
+    </div>
+
+    <button onclick="generateSet()">Générer 5 nouveaux défis</button>
+    <button class="btn-blue" onclick="toggleAnswers()">Afficher/Masquer les réponses</button>
+    <button class="btn-orange" onclick="startProjection()">Mode Projection</button>
+    <button style="background: #95a5a6;" onclick="window.print()">Imprimer la fiche</button>
+</div>
+
+<div id="main">
+    <div id="exercise-list" style="width: 100%;"></div>
+</div>
+
+<div class="proj-nav">
+    <button class="nav-btn" onclick="navProj(-1)">⬅ Précédent</button>
+    <button class="nav-btn" style="background:#e74c3c" onclick="stopProjection()">Quitter [Echap]</button>
+    <button class="nav-btn" onclick="navProj(1)">Suivant ➡</button>
+</div>
+
+<script>
+let showAnswers = false;
+let currentIdx = 0;
+
+// Variables pour mémoriser le dernier exercice
+let lastInconnu = null;
+let lastSplatSum = null;
+
+function generateSet() {
+    const list = document.getElementById('exercise-list');
+    list.innerHTML = "";
+    lastInconnu = null; // Reset pour une nouvelle série
+    lastSplatSum = null;
+    
+    for(let i=0; i<5; i++) { 
+        createOneExercise(list, i); 
+    }
+}
+
+function createOneExercise(container, index) {
+    const maxS = parseInt(document.getElementById('maxSplat').value);
+    const maxB = parseInt(document.getElementById('maxBilles').value);
+    const mode = document.getElementById('typeNombre').value;
+    const allowOpp = document.getElementById('allowOpposite').value === 'yes';
+
+    let inconnu, qL_pos, qL_neg, qR_pos, qR_neg, splatSum;
+
+    // Boucle de validation pour éviter la répétition consécutive
+    let attempts = 0;
+    while (attempts < 20) {
+        inconnu = Math.floor(Math.random() * 9) + 2;
+        
+        qL_pos = Math.floor(Math.random() * maxS) + 1;
+        qL_neg = allowOpp ? Math.floor(Math.random() * maxS) : 0;
+        qR_pos = Math.floor(Math.random() * maxS);
+        qR_neg = allowOpp ? Math.floor(Math.random() * maxS) : 0;
+
+        // Calcul de la "densité" de l'exercice pour varier l'aspect visuel
+        splatSum = qL_pos + qL_neg + qR_pos + qR_neg;
+
+        // Conditions : Inconnu différent ET (Nombre de taches différent OU X total différent)
+        if (inconnu !== lastInconnu || splatSum !== lastSplatSum) {
+            if ((qL_pos - qL_neg) !== (qR_pos - qR_neg)) {
+                break; // C'est tout bon
+            }
+        }
+        attempts++;
+    }
+
+    lastInconnu = inconnu;
+    lastSplatSum = splatSum;
+
+    let billesL = [], sumL = 0;
+    let billesR = [], sumR = 0;
+    const countL = Math.floor(Math.random() * maxB) + 1;
+    const countR = Math.floor(Math.random() * maxB) + 1;
+
+    const xTotalL = (qL_pos - qL_neg) * inconnu;
+    const xTotalR = (qR_pos - qR_neg) * inconnu;
+
+    if (mode === 'entier') {
+        if (xTotalL > xTotalR) {
+            for(let i=0; i<countL; i++) {
+                let v = Math.floor(Math.random() * 10);
+                billesL.push(v); sumL += v;
+            }
+            let totalCibleR = xTotalL + sumL - xTotalR;
+            for(let i=0; i<countR-1; i++) {
+                let v = Math.min(Math.floor(Math.random() * 10), Math.floor(totalCibleR / (countR - i)));
+                billesR.push(v); sumR += v;
+            }
+            billesR.push(totalCibleR - sumR);
+        } else {
+            for(let i=0; i<countR; i++) {
+                let v = Math.floor(Math.random() * 10);
+                billesR.push(v); sumR += v;
+            }
+            let totalCibleL = xTotalR + sumR - xTotalL;
+            for(let i=0; i<countL-1; i++) {
+                let v = Math.min(Math.floor(Math.random() * 10), Math.floor(totalCibleL / (countL - i)));
+                billesL.push(v); sumL += v;
+            }
+            billesL.push(totalCibleL - sumL);
+        }
+    } else {
+        for(let i=0; i<countL; i++) {
+            let v = Math.floor(Math.random() * 19) - 9;
+            billesL.push(v); sumL += v;
+        }
+        let targetSumR = xTotalL + sumL - xTotalR;
+        for(let i=0; i<countR-1; i++) {
+            let v = Math.floor(Math.random() * 19) - 9;
+            billesR.push(v); sumR += v;
+        }
+        billesR.push(targetSumR - sumR);
+    }
+
+    const board = document.createElement('div');
+    board.className = 'board';
+    board.innerHTML = `
+        <div class="side">${renderElements(qL_pos, qL_neg, billesL)}</div>
+        <div class="divider"></div>
+        <div class="side">${renderElements(qR_pos, qR_neg, billesR)}</div>
+        <div class="ans-text">Réponse : ${inconnu}</div>
+    `;
+    container.appendChild(board);
+}
+
+function renderElements(posS, negS, billes) {
+    let html = "";
+    for(let i=0; i<posS; i++) html += `<div class="splat" style="transform:rotate(${Math.random()*360}deg)"></div>`;
+    for(let i=0; i<negS; i++) html += `<div class="splat negative" style="transform:rotate(${Math.random()*360}deg)"></div>`;
+    billes.forEach(b => {
+        const color = b < 0 ? "#e74c3c" : "#2ecc71";
+        html += `<div class="bille" style="border-color:${color}">${b}</div>`;
+    });
+    return html;
+}
+
+function toggleAnswers() {
+    showAnswers = !showAnswers;
+    const texts = document.querySelectorAll('.ans-text');
+    texts.forEach(t => t.style.display = showAnswers ? 'block' : 'none');
+}
+
+function startProjection() { document.body.classList.add('projection-mode'); currentIdx = 0; showExercise(0); }
+function stopProjection() { document.body.classList.remove('projection-mode'); }
+function navProj(dir) {
+    const total = document.querySelectorAll('.board').length;
+    currentIdx = (currentIdx + dir + total) % total;
+    showExercise(currentIdx);
+}
+function showExercise(idx) {
+    const boards = document.querySelectorAll('.board');
+    boards.forEach((b, i) => b.classList.toggle('active', i === idx));
+}
+
+window.addEventListener('keydown', (e) => { if(e.key === "Escape") stopProjection(); });
+generateSet();
+</script>
+</body>
+</html>
