@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Générateur Thalès Expert - Medi09</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --light: #ecf0f1; --orange: #e67e22; --danger: #e74c3c; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 800px; width: 100%; text-align: center; }
+        .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .mode-btn { padding: 8px 15px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .mode-btn.active { background: var(--primary); color: white; }
+        .opt-container { margin-bottom: 15px; background: var(--light); padding: 10px; border-radius: 8px; font-weight: bold; }
+        #svg-container { margin: 15px 0; background: #fff; border: 1px solid #eee; border-radius: 10px; display: flex; justify-content: center; overflow: hidden; min-height: 400px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-gen { background: var(--accent); color: white; }
+        .btn-ans { background: var(--success); color: white; }
+        .btn-check { background: var(--primary); color: white; }
+        .answer-zone { margin: 15px 0; padding: 15px; border-top: 2px dashed #ccc; }
+        #user-input { padding: 10px; border: 2px solid var(--primary); border-radius: 5px; width: 150px; font-size: 1rem; text-align: center; }
+        #feedback { font-weight: bold; margin-top: 10px; min-height: 24px; }
+        .enonce { font-size: 1.1rem; line-height: 1.6; margin: 15px 0; text-align: left; border-left: 5px solid var(--primary); padding-left: 15px; }
+        .solution { display: none; margin-top: 15px; padding: 20px; background: #f0fff4; border-radius: 10px; text-align: left; border: 1px solid var(--success); line-height: 1.8; }
+        .tri-small { fill: rgba(52, 152, 219, 0.2); visibility: hidden; }
+        .tri-big { fill: rgba(39, 174, 96, 0.1); visibility: hidden; }
+        .show-colors .tri-small, .show-colors .tri-big { visibility: visible; }
+        .shape-line { stroke: var(--primary); stroke-width: 2.5; fill: none; }
+        .parallel-line { stroke: #e74c3c; stroke-width: 3; }
+        .label-point { font-weight: bold; font-size: 20px; fill: var(--primary); font-family: serif; }
+        .measure-text { fill: var(--orange); font-size: 18px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="setMode('emboite', this)">Emboîté</button>
+        <button class="mode-btn" onclick="setMode('papillon', this)">Papillon</button>
+        <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
+    </div>
+
+    <div class="opt-container">
+        <label style="cursor:pointer"><input type="checkbox" id="checkColor" onchange="updateColorClass()"> 🎨 Colorier les triangles</label>
+    </div>
+
+    <div id="svg-container">
+        <svg id="thales-svg" width="500" height="400" viewBox="0 0 500 400">
+            <rect width="500" height="400" fill="white" />
+            <g id="main-group"></g>
+        </svg>
+    </div>
+
+    <div id="enonce" class="enonce"></div>
+
+    <div class="answer-zone">
+        <input type="text" id="user-input" placeholder="Ta réponse...">
+        <button class="action btn-check" onclick="checkAnswer()">Vérifier</button>
+        <div id="feedback"></div>
+    </div>
+
+    <div class="controls">
+        <button class="action btn-gen" onclick="generate()">🔄 Nouvel exercice</button>
+        <button class="action btn-ans" onclick="toggleSolution()">👁️ Voir Corrigé</button>
+    </div>
+
+    <div id="solution" class="solution"></div>
+</div>
+
+<script>
+let currentMode = 'emboite';
+let L = [];
+let curRot = 0;
+let correctAnswer = "";
+
+function setMode(m, b) {
+    currentMode = m;
+    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+    b.classList.add('active');
+    generate();
+}
+
+function updateColorClass() {
+    const svg = document.getElementById('thales-svg');
+    if(document.getElementById('checkColor').checked) svg.classList.add('show-colors');
+    else svg.classList.remove('show-colors');
+}
+
+function getLetters() {
+    return "ABCDEFGHJKLMNPQRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 5);
+}
+
+function generate() {
+    document.getElementById('solution').style.display = 'none';
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('user-input').value = '';
+    const group = document.getElementById('main-group');
+    group.innerHTML = '';
+    curRot = Math.floor(Math.random() * 360);
+    group.setAttribute("transform", `rotate(${curRot}, 250, 200)`);
+    L = getLetters();
+    
+    if (currentMode === 'reciproque') setupReciproque();
+    else setupThales();
+}
+
+function setupThales() {
+    const k = (1.4 + Math.random() * 0.8).toFixed(1);
+    const v1 = (3 + Math.random() * 3).toFixed(1);
+    const v1L = (v1 * k).toFixed(1);
+    const v2 = (3 + Math.random() * 3).toFixed(1);
+    const v2L = (v2 * k).toFixed(1);
+    const bS = (4 + Math.random() * 2).toFixed(1);
+    const bL = (bS * k).toFixed(1);
+
+    const type = Math.floor(Math.random() * 3);
+    let but, valBut, n1, d1, n2, d2;
+
+    if(type === 0) { but = L[0]+L[1]; valBut = v1; n1 = L[0]+L[1]; d1 = v1L; n2 = v2; d2 = v2L; }
+    else if(type === 1) { but = L[0]+L[4]; valBut = v2L; n1 = v1; d1 = v1L; n2 = v2; d2 = L[0]+L[4]; }
+    else { but = L[3]+L[4]; valBut = bL; n1 = v1; d1 = v1L; n2 = bS; d2 = L[3]+L[4]; }
+
+    correctAnswer = valBut;
+    document.getElementById('user-input').placeholder = "Ex: 4.5";
+
+    document.getElementById('enonce').innerHTML = `Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont parallèles. <br> Calcule la longueur $${but}$.`;
+    
+    document.getElementById('solution').innerHTML = `Dans les triangles $${L[0]}${L[1]}${L[2]}$ et $${L[0]}${L[3]}${L[4]}$ : <br>
+    • Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont parallèles. <br>
+    • Les points $${L[0]}, ${L[1]}, ${L[3]}$ et $${L[0]}, ${L[2]}, ${L[4]}$ sont alignés. <br>
+    D'après le <b>théorème de Thalès</b>, on a l'égalité : <br>
+    $$\\frac{${L[0]}${L[1]}}{${L[0]}${L[3]}} = \\frac{${L[0]}${L[2]}}{${L[0]}${L[4]}} = \\frac{${L[1]}${L[2]}}{${L[3]}${L[4]}}$$
+    En remplaçant par les valeurs : <br>
+    $$\\frac{${n1}}{${d1}} = \\frac{${n2}}{${d2}}$$
+    D'après le <b>produit en croix</b> : <br>
+    $${but} \\times ${(type === 0 ? d2 : n1)} = ${d1} \\times ${n2}$ <br>
+    $${but} = \\frac{${d1} \\times ${n2}}{${(type === 0 ? d2 : n1)}}$ <br>
+    Finalement : $${but} = \\mathbf{${valBut}}$`;
+
+    if(currentMode === 'emboite') drawEmb(type===0?"?":v1, v1L, v2, type===1?"?":v2L, bS, type===2?"?":bL);
+    else drawPap(type===0?"?":v1, v1L, v2, type===1?"?":v2L, bS, type===2?"?":bL);
+    MathJax.typeset();
+}
+
+function setupReciproque() {
+    const k = (1.5 + Math.random()).toFixed(1);
+    const v1 = parseFloat((3 + Math.random() * 3).toFixed(1));
+    const v1L = parseFloat((v1 * k).toFixed(1));
+    const v2 = parseFloat((3 + Math.random() * 3).toFixed(1));
+    const ok = Math.random() > 0.5;
+    const v2L = ok ? parseFloat((v2 * k).toFixed(1)) : parseFloat((v2 * k + 0.8).toFixed(1));
+
+    correctAnswer = ok ? "oui" : "non";
+    document.getElementById('user-input').placeholder = "oui / non";
+
+    document.getElementById('enonce').innerHTML = `On donne $${L[0]}${L[1]}=${v1}$, $${L[0]}${L[3]}=${v1L}$, $${L[0]}${L[2]}=${v2}$ et $${L[0]}${L[4]}=${v2L}$. <br> Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont-elles parallèles ?`;
+    
+    document.getElementById('solution').innerHTML = `On compare les rapports $\\frac{${L[0]}${L[1]}}{${L[0]}${L[3]}}$ et $\\frac{${L[0]}${L[2]}}{${L[0]}${L[4]}}$ avec les produits en croix : <br>
+    • $${L[0]}${L[1]} \\times ${L[0]}${L[4]} = ${v1} \\times ${v2L} = ${(v1*v2L).toFixed(2)}$ <br>
+    • $${L[0]}${L[3]} \\times ${L[0]}${L[2]} = ${v1L} \\times ${v2} = ${(v1L*v2).toFixed(2)}$ <br>
+    ${ok ? "Les produits sont égaux. D'après la <b>réciproque de Thalès</b>, les droites sont parallèles." : "Les produits ne sont pas égaux. Les droites ne sont pas parallèles."}`;
+
+    Math.random() > 0.5 ? drawEmb(v1, v1L, v2, v2L, "", "") : drawPap(v1, v1L, v2, v2L, "", "");
+    MathJax.typeset();
+}
+
+function checkAnswer() {
+    const userVal = document.getElementById('user-input').value.toLowerCase().trim().replace(',', '.');
+    const fb = document.getElementById('feedback');
+    
+    if(currentMode === 'reciproque') {
+        if(userVal.includes(correctAnswer)) {
+            fb.textContent = "✅ Correct !"; fb.style.color = "var(--success)";
+        } else {
+            fb.textContent = "❌ Faux, réessaie !"; fb.style.color = "var(--danger)";
+        }
+    } else {
+        const numUser = parseFloat(userVal);
+        if(!isNaN(numUser) && Math.abs(numUser - parseFloat(correctAnswer)) < 0.11) {
+            fb.textContent = "✅ Bravo ! C'est la bonne réponse."; fb.style.color = "var(--success)";
+        } else {
+            fb.textContent = "❌ Ce n'est pas ça. Vérifie tes calculs."; fb.style.color = "var(--danger)";
+        }
+    }
+}
+
+function drawEmb(m1, m1L, m2, m2L, bS, bL) {
+    const g = document.getElementById('main-group');
+    const Ax=250, Ay=100, Dx=150, Dy=350, Ex=350, Ey=350;
+    const Bx=Ax+(Dx-Ax)*0.6, By=Ay+(Dy-Ay)*0.6, Cx=Ax+(Ex-Ax)*0.6, Cy=Ay+(Ey-Ay)*0.6;
+    g.innerHTML = `
+        <polygon points="${Ax},${Ay} ${Dx},${Dy} ${Ex},${Ey}" class="tri-big"/>
+        <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
+        <path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/>
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
+    addTxt(g, Ax, Ay, L[0], "label-point", 0, -25);
+    addTxt(g, Bx, By, L[1], "label-point", -25, 0); addTxt(g, Cx, Cy, L[2], "label-point", 25, 0);
+    addTxt(g, Dx, Dy, L[3], "label-point", -25, 25); addTxt(g, Ex, Ey, L[4], "label-point", 25, 25);
+    addTxt(g, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -30, 0);
+    addTxt(g, (Bx+Dx)/2, (By+Dy)/2, m1L, "measure-text", -45, 0);
+    addTxt(g, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 30, 0);
+    addTxt(g, (Cx+Ex)/2, (Cy+Ey)/2, m2L, "measure-text", 45, 0);
+    addTxt(g, (Bx+Cx)/2, (By+Cy)/2, bS, "measure-text", 0, -20);
+    addTxt(g, (Dx+Ex)/2, (Dy+Ey)/2, bL, "measure-text", 0, 35);
+}
+
+function drawPap(m1, m1L, m2, m2L, bS, bL) {
+    const g = document.getElementById('main-group');
+    const Ax=250, Ay=200, Bx=170, By=120, Cx=330, Cy=120, Dx=350, Dy=300, Ex=150, Ey=300;
+    g.innerHTML = `
+        <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
+        <polygon points="${Ax},${Ay} ${Dx},${Dy} ${Ex},${Ey}" class="tri-big"/>
+        <line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/>
+        <line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/>
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/><line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
+    addTxt(g, Ax, Ay, L[0], "label-point", 25, 0);
+    addTxt(g, Bx, By, L[1], "label-point", -20, -20); addTxt(g, Cx, Cy, L[2], "label-point", 20, -20);
+    addTxt(g, Dx, Dy, L[3], "label-point", 20, 20); addTxt(g, Ex, Ey, L[4], "label-point", -20, 20);
+    addTxt(g, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, -10);
+    addTxt(g, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", 35, 10);
+    addTxt(g, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 35, -10);
+    addTxt(g, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", -35, 10);
+    addTxt(g, (Bx+Cx)/2, (By+Cy)/2, bS, "measure-text", 0, -25);
+    addTxt(g, (Ex+Dx)/2, (Ey+Dy)/2, bL, "measure-text", 0, 35);
+}
+
+function addTxt(g, x, y, val, cls, ox, oy) {
+    if(!val || val === "") return;
+    const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.setAttribute("x", x + ox); t.setAttribute("y", y + oy);
+    t.setAttribute("class", cls); t.setAttribute("text-anchor", "middle");
+    t.setAttribute("transform", `rotate(${-curRot}, ${x + ox}, ${y + oy})`);
+    t.textContent = val;
+    g.appendChild(t);
+}
+
+function toggleSolution() {
+    const s = document.getElementById('solution');
+    s.style.display = (s.style.display === 'block') ? 'none' : 'block';
+}
+
+generate();
+</script>
+</body>
+</html>
