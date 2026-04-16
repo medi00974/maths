@@ -2,142 +2,206 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Trigonométrie Expert - Medi09</title>
+    <title>Générateur Trigonométrie Expert - Medi09</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --bg: #f4f7f6; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); max-width: 700px; width: 100%; text-align: center; }
-        
-        .angle-hat { position: relative; display: inline-block; padding-top: 5px; font-weight: bold; }
-        .angle-hat::before { content: "^"; position: absolute; top: -8px; left: 50%; transform: translateX(-50%) scaleX(2.5); font-size: 1.2rem; }
-
-        .mode-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
-        .mode-btn { padding: 12px 20px; border: 2px solid var(--accent); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; color: var(--accent); transition: 0.3s; margin: 5px; }
-        .mode-btn.active { background: var(--accent); color: white; }
-
-        .controls { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; }
-        button.action { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-gen { background: var(--primary); color: white; }
-        .btn-sol { background: var(--success); color: white; }
-
-        #svg-container { background: white; border: 1px solid #eee; border-radius: 10px; margin: 20px 0; padding: 20px; display: flex; justify-content: center; min-height: 320px; }
-        .enonce { text-align: left; border-left: 5px solid var(--accent); padding: 15px; background: #fff; border: 1px solid #ddd; margin: 20px 0; font-size: 1.1rem; line-height: 1.6; }
-        .solution { display: none; text-align: left; padding: 15px; background: #f0fff4; border: 1px solid var(--success); border-radius: 10px; line-height: 1.8; }
-        
-        .triangle-path { fill: #fcfcfc; stroke: var(--primary); stroke-width: 3; stroke-linejoin: round; }
-        .label-svg { font-weight: bold; font-size: 20px; fill: var(--primary); }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --orange: #e67e22; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
+        .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .mode-btn { padding: 10px 20px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .mode-btn.active { background: var(--primary); color: white; }
+        .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
+        .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
+        .cols-1 { grid-template-columns: 1fr; }
+        .cols-2 { grid-template-columns: 1fr 1fr; }
+        .exo-block { border: 1px solid #eee; padding: 20px; border-radius: 10px; page-break-inside: avoid; background: white; text-align: left; position: relative; }
+        .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; }
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-gen { background: var(--accent); color: white; }
+        .btn-ans { background: var(--success); color: white; }
+        .btn-print { background: var(--primary); color: white; }
+        .answer-zone { margin: 10px 0; padding: 10px; border-top: 1px dashed #ccc; display: flex; align-items: center; gap: 10px; }
+        .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 80px; text-align: center; font-weight: bold; }
+        .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
+        .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
+        .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
+        .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
+        @media print {
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: none; max-width: 100%; }
+            .mode-selector, .opt-container, .controls, .answer-zone { display: none !important; }
+            body.print-with-solution .solution { display: block !important; }
+            .exo-block { border: 1px solid #ccc; margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>📐 Mission Trigonométrie</h1>
-
+    <h1>📐 Générateur Trigonométrie</h1>
     <div class="mode-selector">
-        <button id="btn-longueur" class="mode-btn active" onclick="setMode('longueur')">Calculer une longueur</button>
-        <button id="btn-angle" class="mode-btn" onclick="setMode('angle')">Calculer un angle</button>
-        <button id="btn-mixte" class="mode-btn" onclick="setMode('mixte')">Mode Mélange (Aléatoire)</button>
+        <button class="mode-btn active" onclick="setMode('longueur', this)">Calculer Longueur</button>
+        <button class="mode-btn" onclick="setMode('angle', this)">Calculer Angle</button>
+        <button class="mode-btn" onclick="setMode('mixte', this)">Mode Mixte</button>
     </div>
-    
+    <div class="opt-container">
+        <span>Quantité :</span>
+        <select id="exoQty">
+            <option value="1">1 (Mode Interactif)</option>
+            <option value="4">4 exercices</option>
+            <option value="6">6 exercices</option>
+            <option value="8">8 exercices</option>
+        </select>
+        <label><input type="checkbox" id="printSolution" onchange="updatePrintMode()"> Imprimer Corrigé</label>
+    </div>
     <div class="controls">
-        <button class="action btn-gen" onclick="generate()">🔄 Nouveau Défi</button>
-        <button class="action btn-sol" onclick="toggleSolution()">👁️ Voir le corrigé</button>
+        <button class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
+        <button class="action btn-ans" onclick="toggleSolutions()">👁️ Voir/Cacher Corrigés</button>
+        <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
     </div>
-
-    <div id="svg-container">
-        <svg id="trigo-svg" width="320" height="320" viewBox="0 0 320 320"></svg>
-    </div>
-
-    <div id="enonce" class="enonce">Prêt ? Analysez l'énoncé pour trouver l'angle.</div>
-    <div id="solution" class="solution"></div>
+    <div id="print-wrapper" class="print-cols cols-2"></div>
 </div>
 
 <script>
 let currentMode = 'longueur';
-let cur = {}; 
-const sets = ["ABC", "RST", "IJK", "LMN", "DEF", "PQR"];
+let answersMap = {};
 
-function setMode(mode) {
-    currentMode = mode;
+function setMode(m, btn) {
+    currentMode = m;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('btn-' + mode).classList.add('active');
+    btn.classList.add('active');
+    generateSheet();
 }
 
-function generate() {
-    document.getElementById('solution').style.display = 'none';
-    
-    let effectiveMode = currentMode;
-    if (currentMode === 'mixte') {
-        effectiveMode = Math.random() < 0.5 ? 'longueur' : 'angle';
-    }
+function updatePrintMode() {
+    document.body.classList.toggle('print-with-solution', document.getElementById('printSolution').checked);
+}
 
-    const letters = sets[Math.floor(Math.random() * sets.length)].split('');
+function toggleSolutions() {
+    const sols = document.querySelectorAll('.solution');
+    if(sols.length === 0) return;
+    const isHidden = sols[0].style.display === 'none' || sols[0].style.display === '';
+    sols.forEach(s => s.style.display = isHidden ? 'block' : 'none');
+}
+
+function generateSheet() {
+    const qty = parseInt(document.getElementById('exoQty').value);
+    const wrapper = document.getElementById('print-wrapper');
+    wrapper.innerHTML = '';
+    wrapper.className = (qty === 1) ? 'print-cols cols-1' : 'print-cols cols-2';
+    answersMap = {};
+
+    for (let i = 0; i < qty; i++) {
+        const exoDiv = document.createElement('div');
+        exoDiv.className = 'exo-block';
+        let effectiveType = currentMode;
+        if(currentMode === 'mixte') effectiveType = Math.random() < 0.5 ? 'longueur' : 'angle';
+        exoDiv.innerHTML = `
+            <div class="svg-wrap"><svg id="svg-${i}" width="280" height="220" viewBox="0 0 400 300"></svg></div>
+            <div id="enonce-${i}" class="enonce"></div>
+            <div class="answer-zone">
+                <input type="text" class="user-input" id="input-${i}" placeholder="Réponse">
+                <button class="action" style="padding:5px 10px; background:var(--accent); color:white" onclick="checkAnswer(${i})">OK</button>
+                <span id="fb-${i}" class="feedback"></span>
+            </div>
+            <div id="sol-${i}" class="solution"></div>
+        `;
+        wrapper.appendChild(exoDiv);
+        setupTrigoExo(i, effectiveType);
+    }
+    MathJax.typesetPromise();
+}
+
+function setupTrigoExo(id, type) {
+    const letters = ["ABC", "RST", "IJK", "LMN", "DEF", "PQR"][Math.floor(Math.random() * 6)].split('');
+    const rot = Math.floor(Math.random() * 360);
     const S1 = letters[0], S2 = letters[1], S3 = letters[2]; 
-    
-    const fn = ['cos', 'sin', 'tan'][Math.floor(Math.random() * 3)];
-    let ang = Math.floor(Math.random() * 36) + 22; 
-    let adj = Math.floor(Math.random() * 6) + 4; 
-    let hyp = (adj / Math.cos(ang * Math.PI / 180)).toFixed(1);
-    let opp = (adj * Math.tan(ang * Math.PI / 180)).toFixed(1);
+    const angVal = Math.floor(Math.random() * 40) + 25; 
+    const adjVal = Math.floor(Math.random() * 5) + 4;   
+    const oppVal = (adjVal * Math.tan(angVal * Math.PI / 180)).toFixed(1);
+    const hypVal = (adjVal / Math.cos(angVal * Math.PI / 180)).toFixed(1);
+    const config = Math.floor(Math.random() * 3); 
+    const angleName = `\\widehat{${S1}${S3}${S2}}`;
+    let enonce = `Le triangle $${S1}${S2}${S3}$ est rectangle en $${S1}$.<br>`;
+    let sol = `Dans le triangle $${S1}${S2}${S3}$ rectangle en $${S1}$ : <br>`;
+    let correctAns;
 
-    cur = { S1, S2, S3, fn, ang, adj, hyp, opp };
-    
-    const hat = `<span class="angle-hat">${S1}${S3}${S2}</span>`;
-    let txt = `Le triangle ${S1}${S2}${S3} est rectangle en ${S1}.<br>`;
-    let sol = `<b>Méthode SOH CAH TOA :</b><br>Dans le triangle ${S1}${S2}${S3} rectangle en ${S1} :<br>`;
+    if (type === 'longueur') {
+        if (config === 0) { 
+            enonce += `On donne $${S1}${S3} = ${adjVal}$ cm et $${angleName} = ${angVal}^\\circ$. <br>Calcule $${S2}${S3}$.`;
+            sol += `$\\cos(${angleName}) = \\frac{${S1}${S3}}{${S2}${S3}} \\Rightarrow \\frac{\\cos(${angVal}^\\circ)}{1} = \\frac{${adjVal}}{${S2}${S3}}$<br>`;
+            sol += `Produit en croix : $${S2}${S3} \\times \\cos(${angVal}^\\circ) = ${adjVal} \\times 1$<br>`;
+            sol += `$${S2}${S3} = \\frac{${adjVal}}{\\cos(${angVal}^\\circ)} \\approx$ **${hypVal} cm**`;
+            correctAns = hypVal;
+        } else if (config === 1) { 
+            enonce += `On donne $${S2}${S3} = ${hypVal}$ cm et $${angleName} = ${angVal}^\\circ$. <br>Calcule $${S1}${S2}$.`;
+            sol += `$\\sin(${angleName}) = \\frac{${S1}${S2}}{${S2}${S3}} \\Rightarrow \\frac{\\sin(${angVal}^\\circ)}{1} = \\frac{${S1}${S2}}{${hypVal}}$<br>`;
+            sol += `Produit en croix : $${S1}${S2} \\times 1 = ${hypVal} \\times \\sin(${angVal}^\\circ)$<br>`;
+            sol += `$${S1}${S2} \\approx$ **${oppVal} cm**`;
+            correctAns = oppVal;
+        } else { 
+            enonce += `On donne $${S1}${S3} = ${adjVal}$ cm et $${angleName} = ${angVal}^\\circ$. <br>Calcule $${S1}${S2}$.`;
+            sol += `$\\tan(${angleName}) = \\frac{${S1}${S2}}{${S1}${S3}} \\Rightarrow \\frac{\\tan(${angVal}^\\circ)}{1} = \\frac{${S1}${S2}}{${adjVal}}$<br>`;
+            sol += `Produit en croix : $${S1}${S2} \\times 1 = ${adjVal} \\times \\tan(${angVal}^\\circ)$<br>`;
+            sol += `$${S1}${S2} \\approx$ **${oppVal} cm**`;
+            correctAns = oppVal;
+        }
+    } else { 
+        let fName = config === 0 ? "cos" : (config === 1 ? "sin" : "tan");
+        let nom1 = config === 1 ? S1+S2 : S1+S3; 
+        let nom2 = config === 2 ? S1+S2 : S2+S3;
+        let v1 = config === 1 ? oppVal : adjVal;
+        let v2 = config === 2 ? oppVal : hypVal;
+        let mathF = config === 0 ? "\\cos" : (config === 1 ? "\\sin" : "\\tan");
+        let invF = config === 0 ? "\\arccos" : (config === 1 ? "\\arcsin" : "\\arctan");
 
-    if (effectiveMode === 'longueur') {
-        if (fn === 'cos') {
-            txt += `On donne <b>${S1}${S3} = ${adj} cm</b> (adjacent) et ${hat} = ${ang}°. <br>Calcule la longueur de l'hypoténuse <b>${S2}${S3}</b> au dixième.`;
-            sol += `cos(${hat}) = ${S1}${S3} / ${S2}${S3}<br>cos(${ang}°) = ${adj} / ${S2}${S3}<br>${S2}${S3} = ${adj} / cos(${ang}°) ≈ <b>${hyp} cm</b>`;
-        } else if (fn === 'sin') {
-            txt += `On donne <b>${S2}${S3} = ${hyp} cm</b> (hypoténuse) et ${hat} = ${ang}°. <br>Calcule la longueur du côté opposé <b>${S1}${S2}</b> au dixième.`;
-            sol += `sin(${hat}) = ${S1}${S2} / ${S2}${S3}<br>sin(${ang}°) = ${S1}${S2} / ${hyp}<br>${S1}${S2} = ${hyp} × sin(${ang}°) ≈ <b>${opp} cm</b>`;
-        } else {
-            txt += `On donne <b>${S1}${S3} = ${adj} cm</b> (adjacent) et ${hat} = ${ang}°. <br>Calcule la longueur du côté opposé <b>${S1}${S2}</b> au dixième.`;
-            sol += `tan(${hat}) = ${S1}${S2} / ${S1}${S3}<br>tan(${ang}°) = ${S1}${S2} / ${adj}<br>${S1}${S2} = ${adj} × tan(${ang}°) ≈ <b>${opp} cm</b>`;
-        }
-    } else {
-        if (fn === 'cos') {
-            txt += `On donne <b>${S1}${S3} = ${adj} cm</b> (adjacent) et <b>${S2}${S3} = ${hyp} cm</b> (hypoténuse). <br>Calcule la mesure de l'angle ${hat} au degré près.`;
-            sol += `cos(${hat}) = ${S1}${S3} / ${S2}${S3} = ${adj} / ${hyp}<br>Angle = arccos(${adj}/${hyp}) ≈ <b>${ang}°</b>`;
-        } else if (fn === 'sin') {
-            txt += `On donne <b>${S1}${S2} = ${opp} cm</b> (opposé) et <b>${S2}${S3} = ${hyp} cm</b> (hypoténuse). <br>Calcule la mesure de l'angle ${hat} au degré près.`;
-            sol += `sin(${hat}) = ${S1}${S2} / ${S2}${S3} = ${opp} / ${hyp}<br>Angle = arcsin(${opp}/${hyp}) ≈ <b>${ang}°</b>`;
-        } else {
-            txt += `On donne <b>${S1}${S3} = ${adj} cm</b> (adjacent) et <b>${S1}${S2} = ${opp} cm</b> (opposé). <br>Calcule la mesure de l'angle ${hat} au degré près.`;
-            sol += `tan(${hat}) = ${S1}${S2} / ${S1}${S3} = ${opp} / ${adj}<br>Angle = arctan(${opp}/${adj}) ≈ <b>${ang}°</b>`;
-        }
+        enonce += `On donne $${nom1} = ${v1}$ cm et $${nom2} = ${v2}$ cm. <br>Calcule $${angleName}$ au degré près.`;
+        sol += `$${mathF}(${angleName}) = \\frac{${nom1}}{${nom2}} \\Rightarrow ${mathF}(${angleName}) = \\frac{${v1}}{${v2}}$<br>`;
+        sol += `Produit en croix (pour isoler l'angle) : $${mathF}(${angleName}) \\times ${v2} = ${v1} \\times 1$<br>`;
+        sol += `$${mathF}(${angleName}) = \\frac{${v1}}{${v2}}$<br>`;
+        sol += `$${angleName} = ${invF}(\\frac{${v1}}{${v2}}) \\approx$ **${angVal}^\\circ**`;
+        correctAns = angVal;
     }
 
-    document.getElementById('enonce').innerHTML = txt;
-    document.getElementById('solution').innerHTML = sol;
-    drawTriangleClean(S1, S2, S3);
+    answersMap[id] = correctAns;
+    document.getElementById('enonce-'+id).innerHTML = enonce;
+    document.getElementById('sol-'+id).innerHTML = sol;
+    drawTriangle(document.getElementById('svg-'+id), rot, S1, S2, S3);
 }
 
-function drawTriangleClean(S1, S2, S3) {
-    const svg = document.getElementById('trigo-svg');
-    const rot = [0, 90, 180, 270][Math.floor(Math.random() * 4)];
-    const p1 = {x: 80, y: 220}, p2 = {x: 80, y: 80}, p3 = {x: 230, y: 220};
-
-    svg.innerHTML = `
-        <g transform="rotate(${rot}, 150, 150)">
-            <path d="M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y} Z" class="triangle-path" />
-            <path d="M 80 205 L 95 205 L 95 220" fill="none" stroke="#2c3e50" stroke-width="2"/>
-            
-            <text x="${p1.x-25}" y="${p1.y+20}" class="label-svg" transform="rotate(${-rot}, ${p1.x-25}, ${p1.y+20})">${S1}</text>
-            <text x="${p2.x-10}" y="${p2.y-15}" class="label-svg" transform="rotate(${-rot}, ${p2.x-10}, ${p2.y-15})">${S2}</text>
-            <text x="${p3.x+15}" y="${p3.y+15}" class="label-svg" transform="rotate(${-rot}, ${p3.x+15}, ${p3.y+15})">${S3}</text>
-        </g>
+function drawTriangle(svg, rot, S1, S2, S3) {
+    const xA = 150, yA = 220, xB = 150, yB = 80, xC = 300, yC = 220;
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("transform", `rotate(${rot}, 200, 150)`);
+    group.innerHTML = `
+        <path d="M ${xA} ${yA} L ${xB} ${yB} L ${xC} ${yC} Z" class="triangle-path" />
+        <path d="M ${xA} ${yA-20} L ${xA+20} ${yA-20} L ${xA+20} ${yA}" fill="none" stroke="#2c3e50" stroke-width="2"/>
+        <text x="${xA-25}" y="${yA+20}" class="label-point" transform="rotate(${-rot}, ${xA-25}, ${yA+20})">${S1}</text>
+        <text x="${xB-10}" y="${yB-15}" class="label-point" transform="rotate(${-rot}, ${xB-10}, ${yB-15})">${S2}</text>
+        <text x="${xC+15}" y="${yC+15}" class="label-point" transform="rotate(${-rot}, ${xC+15}, ${yC+15})">${S3}</text>
     `;
+    svg.innerHTML = ''; svg.appendChild(group);
 }
 
-function toggleSolution() {
-    const s = document.getElementById('solution');
-    s.style.display = s.style.display === 'block' ? 'none' : 'block';
+function checkAnswer(id) {
+    const val = document.getElementById('input-'+id).value.trim().replace(',', '.');
+    const correct = answersMap[id];
+    const fb = document.getElementById('fb-'+id);
+    if(Math.abs(parseFloat(val) - parseFloat(correct)) <= 0.2) {
+        fb.innerHTML = "✅ Correct !"; fb.style.color = "var(--success)";
+    } else {
+        fb.innerHTML = "❌ Faux (attendu : " + correct + ")"; fb.style.color = "var(--danger)";
+    }
 }
-
-generate();
+generateSheet();
 </script>
 </body>
 </html>
