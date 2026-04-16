@@ -2,167 +2,248 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Entraînement Pythagore - Medi09</title>
+    <title>Générateur Pythagore Expert - Medi09</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #e74c3c; --success: #27ae60; --light: #ecf0f1; }
+        :root { --primary: #2c3e50; --accent: #e67e22; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --blue: #3498db; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 700px; width: 100%; text-align: center; }
-        h1 { color: var(--primary); margin-bottom: 20px; }
-        .mode-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .mode-btn { padding: 10px 15px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
+        
+        /* Menu et Options */
+        .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .mode-btn { padding: 10px 20px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
-        .sub-options { margin-bottom: 20px; padding: 10px; background: var(--light); border-radius: 8px; display: none; }
-        .sub-options label { margin: 0 10px; cursor: pointer; font-size: 0.9rem; }
-        #svg-container { margin: 20px 0; background: #fff; border: 1px solid #eee; border-radius: 10px; padding: 20px; display: flex; justify-content: center; }
-        .controls { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
-        button.action { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-gen { background: var(--accent); color: white; }
+        .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
+        
+        /* Layout Grille pour Impression */
+        .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
+        .cols-1 { grid-template-columns: 1fr; }
+        .cols-2 { grid-template-columns: 1fr 1fr; }
+
+        .exo-block { border: 1px solid #eee; padding: 20px; border-radius: 10px; page-break-inside: avoid; background: white; text-align: left; }
+        .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; }
+        
+        /* Boutons */
+        .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
+        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-gen { background: var(--blue); color: white; }
         .btn-ans { background: var(--success); color: white; }
-        .enonce { font-size: 1.1rem; line-height: 1.6; margin: 20px 0; text-align: left; border-left: 5px solid var(--primary); padding-left: 15px; min-height: 80px; }
-        .solution { display: none; margin-top: 20px; padding: 15px; background: #e8f6ef; border-radius: 10px; text-align: left; border: 1px solid var(--success); font-family: 'Segoe UI', sans-serif; }
-        .triangle-path { fill: #f9f9f9; stroke: var(--primary); stroke-width: 3; stroke-linejoin: round; }
-        .label { font-weight: bold; font-size: 16px; fill: var(--primary); }
-        .measure { fill: #d35400; font-size: 14px; font-weight: bold; }
+        .btn-print { background: var(--primary); color: white; }
+        
+        /* Zone élève */
+        .answer-zone { margin: 10px 0; padding: 10px; border-top: 1px dashed #ccc; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 100px; text-align: center; font-weight: bold; }
+        .feedback { font-weight: bold; margin-left: 10px; }
+
+        .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 10px; }
+        .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; }
+
+        /* SVG Styles */
+        .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
+        .right-angle { fill: none; stroke: var(--danger); stroke-width: 2; }
+        .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
+        .measure-text { fill: var(--orange); font-size: 16px; font-weight: bold; fill: #d35400; }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .card { box-shadow: none; border: none; max-width: 100%; }
+            .mode-selector, .opt-container, .controls, .answer-zone { display: none !important; }
+            body.print-with-solution .solution { display: block !important; }
+            .exo-block { border: 1px solid #ccc; margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>📐 Entraînement Pythagore</h1>
+    <h1>📐 Générateur Pythagore</h1>
 
     <div class="mode-selector">
         <button class="mode-btn active" onclick="setMode('theoreme', this)">Théorème</button>
         <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
-        <button class="mode-btn" onclick="setMode('mixte', this)">Mode Mixte</button>
+        <button class="mode-btn" onclick="setMode('mixte', this)">Mixte</button>
     </div>
 
-    <div id="theoreme-options" class="sub-options" style="display: block;">
-        <strong>Chercher :</strong>
-        <label><input type="radio" name="calcType" value="hypo" checked> L'hypoténuse</label>
-        <label><input type="radio" name="calcType" value="cote"> Un côté de l'angle droit</label>
-        <label><input type="radio" name="calcType" value="aleatoire"> Aléatoire</label>
+    <div class="opt-container">
+        <div id="theoreme-sub-opts">
+            <strong>Côté à chercher :</strong>
+            <select id="calcType">
+                <option value="hypo">Hypoténuse</option>
+                <option value="cote">Côté angle droit</option>
+                <option value="aleatoire" selected>Aléatoire</option>
+            </select>
+        </div>
+
+        <span>Quantité :</span>
+        <select id="exoQty">
+            <option value="1">1 (Mode Interactif)</option>
+            <option value="4">4 exercices</option>
+            <option value="6">6 exercices</option>
+            <option value="8">8 exercices</option>
+        </select>
+
+        <label><input type="checkbox" id="printSolution" onchange="updatePrintMode()"> Imprimer Corrigé</label>
     </div>
 
     <div class="controls">
-        <button class="action btn-gen" onclick="generate()">🔄 Générer l'exercice</button>
-        <button class="action btn-ans" onclick="toggleSolution()">👁️ Voir le corrigé</button>
+        <button class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
+        <button class="action btn-ans" onclick="toggleSolutions()">👁️ Voir/Cacher Corrigés</button>
+        <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
     </div>
 
-    <div id="svg-container">
-        <svg id="triangle-svg" width="400" height="250" viewBox="0 0 400 250"></svg>
-    </div>
-
-    <div id="enonce" class="enonce">Choisissez vos options et cliquez sur Générer.</div>
-    <div id="solution" class="solution"></div>
+    <div id="print-wrapper" class="print-cols cols-2"></div>
 </div>
 
 <script>
 let currentMode = 'theoreme';
-let currentTask = {};
+let answersMap = {};
 
-function setMode(mode, btn) {
-    currentMode = mode;
+function setMode(m, btn) {
+    currentMode = m;
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('theoreme-options').style.display = (mode === 'theoreme') ? 'block' : 'none';
+    document.getElementById('theoreme-sub-opts').style.visibility = (m === 'reciproque') ? 'hidden' : 'visible';
+    generateSheet();
 }
 
-function generate() {
-    document.getElementById('solution').style.display = 'none';
-    let type;
-    if (currentMode === 'theoreme') {
-        const choice = document.querySelector('input[name="calcType"]:checked').value;
-        if (choice === 'aleatoire') type = Math.random() > 0.5 ? 'hypotenuse' : 'cote';
-        else type = (choice === 'hypo') ? 'hypotenuse' : 'cote';
-    } else if (currentMode === 'reciproque') {
-        type = 'reciproque';
-    } else {
-        const types = ['hypotenuse', 'cote', 'reciproque'];
-        type = types[Math.floor(Math.random() * types.length)];
-    }
+function updatePrintMode() {
+    document.body.classList.toggle('print-with-solution', document.getElementById('printSolution').checked);
+}
 
-    let a = Math.floor(Math.random() * 6) + 4; // Côté 1
-    let b = Math.floor(Math.random() * 6) + 4; // Côté 2
-    let c = Math.sqrt(a*a + b*b);
+function toggleSolutions() {
+    const sols = document.querySelectorAll('.solution');
+    if(sols.length === 0) return;
+    const isHidden = sols[0].style.display === 'none' || sols[0].style.display === '';
+    sols.forEach(s => s.style.display = isHidden ? 'block' : 'none');
+}
+
+function getLetters() {
+    return "ABCDEFGHJKLMNPQRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 3);
+}
+
+function generateSheet() {
+    const qty = parseInt(document.getElementById('exoQty').value);
+    const wrapper = document.getElementById('print-wrapper');
+    wrapper.innerHTML = '';
+    wrapper.className = (qty === 1) ? 'print-cols cols-1' : 'print-cols cols-2';
+    answersMap = {};
+
+    for (let i = 0; i < qty; i++) {
+        const exoDiv = document.createElement('div');
+        exoDiv.className = 'exo-block';
+        
+        let type;
+        if (currentMode === 'theoreme') {
+            const sel = document.getElementById('calcType').value;
+            type = (sel === 'aleatoire') ? (Math.random() > 0.5 ? 'hypo' : 'cote') : sel;
+        } else if (currentMode === 'reciproque') {
+            type = 'recip';
+        } else {
+            const choice = Math.random();
+            type = (choice < 0.33) ? 'hypo' : (choice < 0.66 ? 'cote' : 'recip');
+        }
+
+        exoDiv.innerHTML = `
+            <div class="svg-wrap">
+                <svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg>
+            </div>
+            <div id="enonce-${i}" class="enonce"></div>
+            <div class="answer-zone">
+                <input type="text" class="user-input" id="input-${i}" placeholder="Résultat">
+                <button class="action" style="padding:5px 10px; background:var(--blue); color:white" onclick="checkAnswer(${i})">OK</button>
+                <span id="fb-${i}" class="feedback"></span>
+            </div>
+            <div id="sol-${i}" class="solution"></div>
+        `;
+        wrapper.appendChild(exoDiv);
+        setupExo(i, type);
+    }
+    MathJax.typesetPromise();
+}
+
+function setupExo(id, type) {
+    const L = getLetters();
+    const rot = Math.floor(Math.random() * 360);
+    const svg = document.getElementById('svg-'+id);
     
-    if (type === 'hypotenuse') {
-        setupHypotenuse(a, b, c.toFixed(1));
-    } else if (type === 'cote') {
+    let a = Math.floor(Math.random() * 5) + 3; 
+    let b = Math.floor(Math.random() * 5) + 3;
+    let solVal = 0;
+
+    if (type === 'hypo') {
+        let hyp = Math.sqrt(a*a + b*b).toFixed(1);
+        solVal = hyp;
+        answersMap[id] = hyp;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. <br>On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <br><b>Calcule $${L[1]}${L[2]}$</b> (arrondi au dixième).`;
+        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de <b>Pythagore</b> :<br>$${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>$${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a} + ${b*b} = ${a*a + b*b}$<br>$${L[1]}${L[2]} = \\sqrt{${a*a + b*b}} \\approx$ <b>${hyp} cm</b>`;
+        drawTriangle(svg, rot, a, b, "?", L);
+    } 
+    else if (type === 'cote') {
         let hyp = Math.max(a, b) + Math.floor(Math.random() * 3) + 2;
-        let diff = Math.sqrt(hyp*hyp - a*a).toFixed(1);
-        setupCote(a, diff, hyp);
-    } else {
+        let coteManquant = Math.sqrt(hyp*hyp - a*a).toFixed(1);
+        solVal = coteManquant;
+        answersMap[id] = coteManquant;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. <br>On donne l'hypoténuse $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <br><b>Calcule $${L[0]}${L[2]}$</b> (arrondi au dixième).`;
+        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de <b>Pythagore</b> :<br>$${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>$${hyp}^2 = ${a}^2 + ${L[0]}${L[2]}^2$<br>$${(hyp*hyp).toFixed(1)} = ${a*a} + ${L[0]}${L[2]}^2$<br>$${L[0]}${L[2]}^2 = ${(hyp*hyp).toFixed(1)} - ${a*a} = ${(hyp*hyp - a*a).toFixed(1)}$<br>$${L[0]}${L[2]} = \\sqrt{${(hyp*hyp - a*a).toFixed(1)}} \\approx$ <b>${coteManquant} cm</b>`;
+        drawTriangle(svg, rot, a, "?", hyp, L);
+    }
+    else {
         const isRight = Math.random() > 0.5;
-        let c_recip = isRight ? c : c + (Math.random() > 0.5 ? 1.5 : -1.2);
-        setupReciproque(a, b, c_recip.toFixed(1));
+        let hyp = isRight ? Math.sqrt(a*a + b*b) : (Math.sqrt(a*a + b*b) + 1.2);
+        hyp = parseFloat(hyp.toFixed(1));
+        answersMap[id] = isRight ? "oui" : "non";
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ a pour côtés : <br>$${L[0]}${L[1]} = ${a}$ cm, $${L[0]}${L[2]} = ${b}$ cm et $${L[1]}${L[2]} = ${hyp}$ cm. <br><b>Est-il rectangle ?</b> (répondre par oui/non)`;
+        document.getElementById('sol-'+id).innerHTML = `Côté le plus long : $${L[1]}${L[2]}^2 = ${hyp}^2 = ${(hyp*hyp).toFixed(2)}$<br>Somme des carrés : $${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a + b*b}$<br>${isRight ? "On constate l'égalité. D'après la <b>réciproque</b> du théorème de Pythagore, le triangle est rectangle." : "L'égalité n'est pas vérifiée. Le triangle n'est pas rectangle."}`;
+        drawTriangle(svg, rot, a, b, hyp, L, false);
     }
 }
 
-function setupHypotenuse(a, b, c) {
-    currentTask = {
-        enonce: `Le triangle ABC est rectangle en A tel que AB = ${a} cm et AC = ${b} cm.<br><strong>Calcule la longueur BC au dixième près.</strong>`,
-        sol: `Dans le triangle ABC rectangle en A, d'après le théorème de Pythagore :<br>BC² = AB² + AC²<br>BC² = ${a}² + ${b}² = ${a*a} + ${b*b}<br>BC² = ${a*a + b*b}<br>BC = √${a*a + b*b} ≈ <b>${c} cm</b>`
-    };
-    drawTriangle(a, b, "?", "A", "B", "C", true);
-    updateUI();
-}
-
-function setupCote(a, b, c) {
-    currentTask = {
-        enonce: `Le triangle DEF est rectangle en D tel que l'hypoténuse EF = ${c} cm et DF = ${a} cm.<br><strong>Calcule la longueur DE au dixième près.</strong>`,
-        sol: `Dans le triangle DEF rectangle en D, d'après le théorème de Pythagore :<br>EF² = DE² + DF²<br>${c}² = DE² + ${a}²<br>${(c*c).toFixed(1)} = DE² + ${a*a}<br>DE² = ${(c*c).toFixed(1)} - ${a*a} = ${(c*c - a*a).toFixed(1)}<br>DE = √${(c*c - a*a).toFixed(1)} ≈ <b>${b} cm</b>`
-    };
-    drawTriangle(a, "?", c, "D", "F", "E", true);
-    updateUI();
-}
-
-function setupReciproque(a, b, c) {
-    const carres = (a*a + b*b).toFixed(1);
-    const hypCarre = (c*c).toFixed(1);
-    const isRight = Math.abs(carres - hypCarre) < 0.2;
-    currentTask = {
-        enonce: `Le triangle IJK a pour mesures : IJ = ${a} cm, IK = ${b} cm et JK = ${c} cm.<br><strong>Ce triangle est-il rectangle ?</strong>`,
-        sol: `Côté le plus long : JK² = ${c}² = ${hypCarre}<br>IJ² + IK² = ${a}² + ${b}² = ${carres}<br>${isRight ? `On constate que JK² = IJ² + IK². D'après la réciproque du théorème de Pythagore, le triangle <b>est rectangle</b>.` : `On constate que JK² ≠ IJ² + IK². L'égalité de Pythagore n'est pas vérifiée. Le triangle <b>n'est pas rectangle</b>.`}`
-    };
-    drawTriangle(a, b, c, "I", "J", "K", false);
-    updateUI();
-}
-
-function updateUI() {
-    document.getElementById('enonce').innerHTML = currentTask.enonce;
-    document.getElementById('solution').innerHTML = currentTask.sol;
-}
-
-function toggleSolution() {
-    const s = document.getElementById('solution');
-    s.style.display = s.style.display === 'block' ? 'none' : 'block';
-}
-
-function drawTriangle(a, b, c, p1, p2, p3, showRightAngle) {
-    const svg = document.getElementById('triangle-svg');
-    // Coordonnées de base pour un triangle visuel propre
-    const xA = 100, yA = 180;
-    const xB = 300, yB = 180;
-    const xC = 100, yC = 50;
+function checkAnswer(id) {
+    const val = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
+    const correct = answersMap[id];
+    const fb = document.getElementById('fb-'+id);
     
-    let rightAngle = "";
-    if (showRightAngle) {
-        rightAngle = `<path d="M 100 160 L 120 160 L 120 180" fill="none" stroke="#e74c3c" stroke-width="2"/>`;
+    if (correct === "oui" || correct === "non") {
+        if(val === correct) { fb.textContent = "✅"; fb.style.color = "var(--success)"; }
+        else { fb.textContent = "❌"; fb.style.color = "var(--danger)"; }
+    } else {
+        if(Math.abs(parseFloat(val) - parseFloat(correct)) < 0.2) { fb.textContent = "✅"; fb.style.color = "var(--success)"; }
+        else { fb.textContent = "❌"; fb.style.color = "var(--danger)"; }
     }
-
-    svg.innerHTML = `
-        <path d="M ${xA} ${yA} L ${xB} ${yB} L ${xC} ${yC} Z" class="triangle-path" />
-        ${rightAngle}
-        <text x="${xA-20}" y="${yA+20}" class="label">${p1}</text>
-        <text x="${xB+10}" y="${yB+10}" class="label">${p2}</text>
-        <text x="${xC-10}" y="${yC-15}" class="label">${p3}</text>
-        <text x="${(xA+xB)/2}" y="${yA+25}" class="measure">${a} cm</text>
-        <text x="${xA-60}" y="${(yA+yC)/2}" class="measure">${b === '?' ? '?' : b + ' cm'}</text>
-        <text x="${(xB+xC)/2 + 10}" y="${(yB+yC)/2 - 10}" class="measure">${c === '?' ? '?' : c + ' cm'}</text>
-    `;
 }
 
-generate();
+function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
+    const xA = 150, yA = 200;
+    const xB = 300, yB = 200;
+    const xC = 150, yC = 80;
+
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("transform", `rotate(${rot}, 200, 150)`);
+
+    let content = `
+        <path d="M ${xA} ${yA} L ${xB} ${yB} L ${xC} ${yC} Z" class="triangle-path" />
+        ${hasRightAngle ? `<path d="M ${xA} ${yA-20} L ${xA+20} ${yA-20} L ${xA+20} ${yA}" class="right-angle"/>` : ''}
+        <text x="${xA-25}" y="${yA+20}" class="label-point" transform="rotate(${-rot}, ${xA-25}, ${yA+20})">${L[0]}</text>
+        <text x="${xB+10}" y="${yB+10}" class="label-point" transform="rotate(${-rot}, ${xB+10}, ${yB+10})">${L[1]}</text>
+        <text x="${xC-10}" y="${yC-15}" class="label-point" transform="rotate(${-rot}, ${xC-10}, ${yC-15})">${L[2]}</text>
+        
+        <text x="${(xA+xB)/2}" y="${yA+25}" class="measure-text" transform="rotate(${-rot}, ${(xA+xB)/2}, ${yA+25})">${a} cm</text>
+        <text x="${xA-50}" y="${(yA+yC)/2}" class="measure-text" transform="rotate(${-rot}, ${xA-50}, ${(yA+yC)/2})">${b === '?' ? '?' : b + ' cm'}</text>
+        <text x="${(xB+xC)/2 + 15}" y="${(yB+yC)/2 - 10}" class="measure-text" transform="rotate(${-rot}, ${(xB+xC)/2+15}, ${(yB+yC)/2-10})">${c === '?' ? '?' : c + ' cm'}</text>
+    `;
+
+    group.innerHTML = content;
+    svg.innerHTML = '';
+    svg.appendChild(group);
+}
+
+generateSheet();
 </script>
 </body>
 </html>
