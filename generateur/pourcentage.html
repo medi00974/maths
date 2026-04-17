@@ -7,11 +7,15 @@
         :root { --border: #000; --bg-top: #fffde7; --bg-bottom: #e1f5fe; --fill-color: #f39c12; }
         body { font-family: 'Arial', sans-serif; margin: 0; display: flex; background: #f4f4f4; }
         
-        #config { width: 350px; background: white; border-right: 2px solid #ccc; padding: 20px; height: 100vh; position: sticky; top: 0; }
+        #config { width: 350px; background: white; border-right: 2px solid #ccc; padding: 20px; height: 100vh; position: sticky; top: 0; box-sizing: border-box; overflow-y: auto;}
         .group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
-        select, input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #aaa; }
+        select, input[type="number"] { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #aaa; box-sizing: border-box; }
         
+        .checkbox-group { background: #f9f9f9; padding: 10px; border-radius: 5px; border: 1px solid #eee; margin-top: 5px; }
+        .checkbox-group label { font-weight: normal; display: flex; align-items: center; cursor: pointer; margin-bottom: 8px; }
+        .checkbox-group input { width: auto; margin-right: 10px; }
+
         button { width: 100%; padding: 12px; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         .btn-gen { background: #27ae60; }
         .btn-ans { background: #2980b9; }
@@ -59,7 +63,7 @@
 
         .answer { margin-top: 15px; color: #d35400; font-weight: bold; display: none; font-size: 0.9rem; border-top: 1px dashed #ccc; padding-top: 10px; }
 
-        .close-board { display: none; position: fixed; top: 20px; right: 20px; background: #e74c3c; padding: 10px 20px; z-index: 100; border-radius: 5px;}
+        .close-board { display: none; position: fixed; top: 20px; right: 20px; background: #e74c3c; padding: 10px 20px; z-index: 100; border-radius: 5px; color:white; border:none;}
         body.board-mode .close-board { display: block; }
 
         @media print {
@@ -81,15 +85,17 @@
             <option value="dec">Avec décimaux</option>
         </select>
     </div>
+    
     <div class="group">
-        <label>Objectif :</label>
-        <select id="probGoal">
-            <option value="mix">Mélange total</option>
-            <option value="part">Calculer la partie</option>
-            <option value="pct">Trouver le %</option>
-            <option value="total">Trouver le tout</option>
-        </select>
+        <label>Inclure les objectifs :</label>
+        <div class="checkbox-group" id="goalOptions">
+            <label><input type="checkbox" value="part" checked> Calculer la partie</label>
+            <label><input type="checkbox" value="pct" checked> Trouver le %</label>
+            <label><input type="checkbox" value="total" checked> Trouver le tout</label>
+        </div>
+        <small style="color:#666">Cochez les types que vous souhaitez afficher/imprimer.</small>
     </div>
+
     <div class="group">
         <label>Nombre d'exercices :</label>
         <input type="number" id="nbProb" value="3" min="1" max="10">
@@ -137,21 +143,30 @@ const scenarios = {
 function generate() {
     const list = document.getElementById('list');
     const nb = document.getElementById('nbProb').value;
+    
+    // Récupérer les types sélectionnés
+    const selectedTypes = Array.from(document.querySelectorAll('#goalOptions input:checked')).map(cb => cb.value);
+    
+    if (selectedTypes.length === 0) {
+        alert("Veuillez sélectionner au moins un objectif !");
+        return;
+    }
+
     list.innerHTML = "";
     showAns = false;
     lastPct = null;
     lastAns = null;
-    for(let i=0; i<nb; i++) create(list);
+    for(let i=0; i<nb; i++) create(list, selectedTypes);
 }
 
-function create(container) {
+function create(container, selectedTypes) {
     const isDec = document.getElementById('numType').value === 'dec';
-    const goal = document.getElementById('probGoal').value;
-    const type = goal === 'mix' ? ['part','pct','total'][Math.floor(Math.random()*3)] : goal;
+    
+    // Choisir un type parmi ceux sélectionnés
+    const type = selectedTypes[Math.floor(Math.random() * selectedTypes.length)];
     
     let pct, total, part, reponseVal;
     
-    // Boucle pour éviter les doublons consécutifs
     do {
         pct = refPcts[Math.floor(Math.random()*refPcts.length)];
         total = isDec ? (Math.floor(Math.random() * 150) + 20) : (Math.floor(Math.random() * 40) * 10 + 100);
