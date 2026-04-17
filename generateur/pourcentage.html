@@ -89,6 +89,7 @@
     <div class="group">
         <label>Inclure les objectifs :</label>
         <div class="checkbox-group" id="goalOptions">
+            <label><input type="checkbox" value="calc" checked> Calculer le % d'une valeur</label>
             <label><input type="checkbox" value="part" checked> Calculer la partie</label>
             <label><input type="checkbox" value="pct" checked> Trouver le %</label>
             <label><input type="checkbox" value="total" checked> Trouver le tout</label>
@@ -120,6 +121,11 @@ let lastAns = null;
 const refPcts = [5, 10, 15, 20, 25, 30, 40, 50, 60, 70, 75, 80, 90];
 
 const scenarios = {
+    calc: [
+        { t: "Calculer {pct}% de {total} {u}.", u: "" },
+        { t: "Combien représente {pct}% d'une quantité de {total} {u} ?", u: "" },
+        { t: "Trouver la valeur correspondant à {pct}% de {total} {u}.", u: "" }
+    ],
     part: [
         { t: "Un smartphone coûte {total}€. Pendant les soldes, il y a une remise de {pct}%. Quel est le montant de la réduction ?", u: "€" },
         { t: "Une batterie de vélo a une capacité totale de {total} Wh. Elle est actuellement chargée à {pct}%. Combien de Wh reste-t-il ?", u: "Wh" },
@@ -176,15 +182,15 @@ function create(container, selectedTypes) {
         else if(pct % 10 === 0) total = Math.ceil(total/10)*10;
         
         part = parseFloat(((pct / 100) * total).toFixed(2));
-        reponseVal = (type === 'part' ? part : (type === 'pct' ? pct : total));
+        reponseVal = (type === 'part' || type === 'calc' ? part : (type === 'pct' ? pct : total));
     } while (pct === lastPct || reponseVal === lastAns);
 
     lastPct = pct;
     lastAns = reponseVal;
 
     const scene = scenarios[type][Math.floor(Math.random()*scenarios[type].length)];
-    let enonce = scene.t.replace("{total}", total).replace("{pct}", pct).replace("{part}", part);
-    let reponseLabel = (type === 'part' ? part : (type === 'pct' ? pct + "%" : total)) + " " + (type === 'pct' ? "" : scene.u);
+    let enonce = scene.t.replace("{total}", total).replace("{pct}", pct).replace("{part}", part).replace("{u}", scene.u);
+    let reponseLabel = (type === 'part' || type === 'calc' ? part : (type === 'pct' ? pct + "%" : total)) + " " + (type === 'pct' ? "" : scene.u);
 
     let ticksHTML = "";
     for(let i = 5; i < 100; i += 5) {
