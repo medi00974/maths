@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Générateur de Distributivité - Combo - Medi09</title>
+    <title>Générateur Distributivité Combo - Medi09</title>
     <script>
         window.MathJax = {
             tex: { 
@@ -33,10 +33,11 @@
         .cols-2 { grid-template-columns: 1fr 1fr; }
         .exo-card { border: 1px solid #ddd; padding: 15px; border-radius: 10px; background: #fff; page-break-inside: avoid; }
         .exo-header { font-weight: bold; color: var(--primary); margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
-        .exo-expression { font-size: 1.2rem; margin: 10px 0; word-wrap: break-word; }
+        .exo-expression { font-size: 1.2rem; margin: 10px 0; }
         .input-zone { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
         .user-input { padding: 8px; width: 220px; border: 2px solid var(--accent); border-radius: 5px; font-size: 0.9rem; }
-        .solution { display: none; margin-top: 15px; padding: 12px; background: #fafff0; border: 1px solid #d4e0b5; border-radius: 4px; font-size: 0.95rem; }
+        .solution { display: none; margin-top: 15px; padding: 12px; background: #fafff0; border: 1px solid #d4e0b5; border-radius: 4px; }
+        .sol-flex { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
         @media print {
             .menu, .input-zone, .btn { display: none !important; }
             body { background: white; padding: 0; }
@@ -48,14 +49,14 @@
 <body id="main-body">
 
 <div class="container">
-    <h1>Distributivité : Les Défis</h1>
+    <h1>Distributivité Combo (avec Tableaux)</h1>
     <div class="menu">
         <div class="menu-item">
             <label>Type :</label>
             <select id="typeExo">
-                <option value="mix_combo">Expressions Mixtes (Simple + Double)</option>
-                <option value="simple">Distributivité Simple</option>
-                <option value="double">Distributivité Double</option>
+                <option value="mix_combo">Mélange Simple + Double</option>
+                <option value="simple">Simple uniquement</option>
+                <option value="double">Double uniquement</option>
             </select>
         </div>
         <div class="menu-item">
@@ -70,7 +71,7 @@
             </select>
         </div>
         <div class="menu-item">
-            <label style="cursor: pointer;"><input type="checkbox" id="checkPrintSol" onchange="togglePrintClass()"> Inclure la correction</label>
+            <label style="cursor: pointer;"><input type="checkbox" id="checkPrintSol" onchange="togglePrintClass()"> Imprimer la correction</label>
         </div>
         <div style="align-self: flex-end; display: flex; gap: 8px;">
             <button class="btn btn-gen" onclick="generate()">🔄 Générer</button>
@@ -89,6 +90,8 @@ function togglePrintClass() {
 }
 
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function r(val) { return "\\color{red}{" + val + "}"; }
 
 function formatTerm(c, power, isFirst = false) {
     if (c === 0) return "";
@@ -123,12 +126,13 @@ function generate() {
                 <span id="fb-${i}"></span>
             </div>
             <div id="sol-${i}" class="solution">
-                <strong>Étapes de correction LaTeX :</strong>
-                $$ \\begin{aligned} 
-                E &= ${exo.enonce} \\\\
-                E &= (${exo.devSimple}) + (${exo.devDouble}) \\\\
-                E &= \\mathbf{${exo.final}} 
-                \\end{aligned} $$
+                <strong>Méthode des tableaux :</strong>
+                <div class="sol-flex">
+                    <div>$$${exo.tab1 || ""} $$</div>
+                    <div>$$${exo.tab2 || ""} $$</div>
+                </div>
+                <strong>Réduction finale :</strong>
+                $E = ${exo.final}$
             </div>
         `;
         grid.appendChild(card);
@@ -137,11 +141,12 @@ function generate() {
 }
 
 function generateSimple() {
-    let a = rand(-5, 5); if(a===0) a=2;
-    let b = rand(-5, 5); if(b===0) b=1;
-    let c = rand(-9, 9);
-    let final = formatTerm(a*b, 1, true) + formatTerm(a*c, 0);
-    return { enonce: `${a}(${formatTerm(b, 1, true)}${formatTerm(c, 0)})`, devSimple: final, devDouble: "0", final };
+    let k = rand(-5, 5); if(k===0) k=2;
+    let a = rand(-5, 5); if(a===0) a=1;
+    let b = rand(-9, 9);
+    let tab = `\\begin{array}{|c|c|c|} \\hline \\times & ${a}x & ${b} \\\\ \\hline ${k} & ${r(k*a+"x")} & ${r(k*b)} \\\\ \\hline \\end{array}`;
+    let res = formatTerm(k*a, 1, true) + formatTerm(k*b, 0);
+    return { enonce: `${k}(${formatTerm(a, 1, true)}${formatTerm(b, 0)})`, tab1: tab, final: res };
 }
 
 function generateDouble() {
@@ -149,37 +154,35 @@ function generateDouble() {
     let b = rand(-5, 5);
     let c = rand(-4, 4); if(c===0) c=2;
     let d = rand(-5, 5);
-    let final = formatTerm(a*c, 2, true) + formatTerm(a*d + b*c, 1) + formatTerm(b*d, 0);
-    return { enonce: `(${formatTerm(a, 1, true)}${formatTerm(b, 0)})(${formatTerm(c, 1, true)}${formatTerm(d, 0)})`, devSimple: "0", devDouble: final, final };
+    let tab = `\\begin{array}{|c|c|c|} \\hline \\times & ${c}x & ${d} \\\\ \\hline ${a}x & ${r(a*c+"x^2")} & ${r(a*d+"x")} \\\\ \\hline ${b} & ${r(b*c+"x")} & ${r(b*d)} \\\\ \\hline \\end{array}`;
+    let res = formatTerm(a*c, 2, true) + formatTerm(a*d+b*c, 1) + formatTerm(b*d, 0);
+    return { enonce: `(${formatTerm(a, 1, true)}${formatTerm(b, 0)})(${formatTerm(c, 1, true)}${formatTerm(d, 0)})`, tab1: tab, final: res };
 }
 
 function generateCombo() {
-    // Partie Simple : k(ax + b)
-    let k = rand(-5, 5); if(k===0) k=3;
-    let sa = rand(-4, 4); if(sa===0) sa=1;
-    let sb = rand(-9, 9);
-    let part1_enonce = `${k}(${formatTerm(sa, 1, true)}${formatTerm(sb, 0)})`;
-    let part1_dev = formatTerm(k*sa, 1, true) + formatTerm(k*sb, 0);
+    // Dist simple
+    let k = rand(-4, 4); if(k===0) k=3;
+    let sa = rand(-3, 3); if(sa===0) sa=1;
+    let sb = rand(-6, 6);
+    let tabS = `\\begin{array}{|c|c|c|} \\hline \\text{Simple} & ${sa}x & ${sb} \\\\ \\hline ${k} & ${r(k*sa+"x")} & ${r(k*sb)} \\\\ \\hline \\end{array}`;
 
-    // Partie Double : (cx + d)(ex + f)
-    let c = rand(-3, 3); if(c===0) c=1;
+    // Dist double
+    let a = rand(-3, 3); if(a===0) a=1;
+    let b = rand(-5, 5);
+    let c = rand(-3, 3); if(c===0) c=2;
     let d = rand(-5, 5);
-    let e = rand(-3, 3); if(e===0) e=2;
-    let f = rand(-5, 5);
-    let part2_enonce = `(${formatTerm(c, 1, true)}${formatTerm(d, 0)})(${formatTerm(e, 1, true)}${formatTerm(f, 0)})`;
-    let part2_dev = formatTerm(c*e, 2, true) + formatTerm(c*f + d*e, 1) + formatTerm(d*f, 0);
+    let tabD = `\\begin{array}{|c|c|c|} \\hline \\text{Double} & ${c}x & ${d} \\\\ \\hline ${a}x & ${r(a*c+"x^2")} & ${r(a*d+"x")} \\\\ \\hline ${b} & ${r(b*c+"x")} & ${r(b*d)} \\\\ \\hline \\end{array}`;
 
-    // Fusion
-    let finalX2 = c*e;
-    let finalX1 = (k*sa) + (c*f + d*e);
-    let finalC = (k*sb) + (d*f);
-    
-    let finalRes = formatTerm(finalX2, 2, true) + formatTerm(finalX1, 1, finalX2===0) + formatTerm(finalC, 0, (finalX2===0 && finalX1===0));
+    // Calcul final
+    let fx2 = a*c;
+    let fx1 = (k*sa) + (a*d + b*c);
+    let fc = (k*sb) + (b*d);
+    let finalRes = formatTerm(fx2, 2, true) + formatTerm(fx1, 1, fx2===0) + formatTerm(fc, 0, (fx2===0 && fx1===0));
 
     return {
-        enonce: part1_enonce + " + " + part2_enonce,
-        devSimple: part1_dev,
-        devDouble: part2_dev,
+        enonce: `${k}(${formatTerm(sa, 1, true)}${formatTerm(sb, 0)}) + (${formatTerm(a, 1, true)}${formatTerm(b, 0)})(${formatTerm(c, 1, true)}${formatTerm(d, 0)})`,
+        tab1: tabS,
+        tab2: tabD,
         final: finalRes || "0"
     };
 }
