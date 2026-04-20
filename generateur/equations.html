@@ -81,8 +81,8 @@
     <div class="group">
         <label>Type de nombres :</label>
         <select id="typeNombre">
-            <option value="entier">Entiers (0 à 9)</option>
-            <option value="relatif">Relatifs (-9 à 9)</option>
+            <option value="entier">Entiers (1 à 9)</option>
+            <option value="relatif">Relatifs (non nuls)</option>
         </select>
     </div>
 
@@ -106,14 +106,13 @@
 let showAnswers = false;
 let currentIdx = 0;
 
-// Variables pour mémoriser le dernier exercice
 let lastInconnu = null;
 let lastSplatSum = null;
 
 function generateSet() {
     const list = document.getElementById('exercise-list');
     list.innerHTML = "";
-    lastInconnu = null; // Reset pour une nouvelle série
+    lastInconnu = null; 
     lastSplatSum = null;
     
     for(let i=0; i<5; i++) { 
@@ -129,9 +128,8 @@ function createOneExercise(container, index) {
 
     let inconnu, qL_pos, qL_neg, qR_pos, qR_neg, splatSum;
 
-    // Boucle de validation pour éviter la répétition consécutive
     let attempts = 0;
-    while (attempts < 20) {
+    while (attempts < 50) {
         inconnu = Math.floor(Math.random() * 9) + 2;
         
         qL_pos = Math.floor(Math.random() * maxS) + 1;
@@ -139,13 +137,19 @@ function createOneExercise(container, index) {
         qR_pos = Math.floor(Math.random() * maxS);
         qR_neg = allowOpp ? Math.floor(Math.random() * maxS) : 0;
 
-        // Calcul de la "densité" de l'exercice pour varier l'aspect visuel
         splatSum = qL_pos + qL_neg + qR_pos + qR_neg;
 
-        // Conditions : Inconnu différent ET (Nombre de taches différent OU X total différent)
         if (inconnu !== lastInconnu || splatSum !== lastSplatSum) {
             if ((qL_pos - qL_neg) !== (qR_pos - qR_neg)) {
-                break; // C'est tout bon
+                
+                // Calcul des sommes nécessaires pour vérifier qu'aucune bille finale ne sera à 0
+                const xTotalL = (qL_pos - qL_neg) * inconnu;
+                const xTotalR = (qR_pos - qR_neg) * inconnu;
+                
+                // Simulation rapide pour éviter les impasses de billes à 0
+                if (Math.abs(xTotalL - xTotalR) >= 1) {
+                    break;
+                }
             }
         }
         attempts++;
@@ -165,38 +169,44 @@ function createOneExercise(container, index) {
     if (mode === 'entier') {
         if (xTotalL > xTotalR) {
             for(let i=0; i<countL; i++) {
-                let v = Math.floor(Math.random() * 10);
+                let v = Math.floor(Math.random() * 9) + 1; // Pas de 0
                 billesL.push(v); sumL += v;
             }
             let totalCibleR = xTotalL + sumL - xTotalR;
             for(let i=0; i<countR-1; i++) {
-                let v = Math.min(Math.floor(Math.random() * 10), Math.floor(totalCibleR / (countR - i)));
+                let v = Math.max(1, Math.min(Math.floor(Math.random() * 9) + 1, totalCibleR - (countR - i)));
                 billesR.push(v); sumR += v;
             }
             billesR.push(totalCibleR - sumR);
         } else {
             for(let i=0; i<countR; i++) {
-                let v = Math.floor(Math.random() * 10);
+                let v = Math.floor(Math.random() * 9) + 1; // Pas de 0
                 billesR.push(v); sumR += v;
             }
             let totalCibleL = xTotalR + sumR - xTotalL;
             for(let i=0; i<countL-1; i++) {
-                let v = Math.min(Math.floor(Math.random() * 10), Math.floor(totalCibleL / (countL - i)));
+                let v = Math.max(1, Math.min(Math.floor(Math.random() * 9) + 1, totalCibleL - (countL - i)));
                 billesL.push(v); sumL += v;
             }
             billesL.push(totalCibleL - sumL);
         }
     } else {
+        // Mode relatif : on évite 0
         for(let i=0; i<countL; i++) {
-            let v = Math.floor(Math.random() * 19) - 9;
+            let v = 0; while(v === 0) v = Math.floor(Math.random() * 19) - 9;
             billesL.push(v); sumL += v;
         }
         let targetSumR = xTotalL + sumL - xTotalR;
         for(let i=0; i<countR-1; i++) {
-            let v = Math.floor(Math.random() * 19) - 9;
+            let v = 0; while(v === 0) v = Math.floor(Math.random() * 19) - 9;
             billesR.push(v); sumR += v;
         }
-        billesR.push(targetSumR - sumR);
+        let finalR = targetSumR - sumR;
+        if(finalR === 0) { // Correction de secours si le dernier tombe sur 0
+            billesR[0] -= 1;
+            finalR += 1;
+        }
+        billesR.push(finalR);
     }
 
     const board = document.createElement('div');
