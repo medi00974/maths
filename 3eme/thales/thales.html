@@ -260,13 +260,22 @@ function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
         <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
         <path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/>
         <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
+    
     addTxt(g, rot, Ax, Ay, L[0], "label-point", 0, -25);
-    addTxt(g, rot, Bx, By, L[1], "label-point", -25, 0); addTxt(g, rot, Cx, Cy, L[2], "label-point", 25, 0);
-    addTxt(g, rot, Dx, Dy, L[3], "label-point", -25, 25); addTxt(g, rot, Ex, Ey, L[4], "label-point", 25, 25);
+    addTxt(g, rot, Bx, By, L[1], "label-point", -25, 0); 
+    addTxt(g, rot, Cx, Cy, L[2], "label-point", 25, 0);
+    addTxt(g, rot, Dx, Dy, L[3], "label-point", -25, 25); 
+    addTxt(g, rot, Ex, Ey, L[4], "label-point", 25, 25);
+    
+    // Mesures côtés gauches : m1 (petit) et m1L (grand TOTAL)
     addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -30, 0);
-    addTxt(g, rot, (Bx+Dx)/2, (By+Dy)/2, m1L, "measure-text", -45, 0);
+    // On décale le grand côté (m1L) pour qu'il soit clairement pour PD
+    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", -65, 0); 
+
+    // Mesures côtés droits : m2 (petit) et m2L (grand TOTAL)
     addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 30, 0);
-    addTxt(g, rot, (Cx+Ex)/2, (Cy+Ey)/2, m2L, "measure-text", 45, 0);
+    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", 65, 0);
+
     addTxt(g, rot, (Bx+Cx)/2, (By+Cy)/2, bS, "measure-text", 0, -20);
     addTxt(g, rot, (Dx+Ex)/2, (Dy+Ey)/2, bL, "measure-text", 0, 35);
 }
