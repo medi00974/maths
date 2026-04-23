@@ -11,17 +11,18 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #e67e22; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --blue: #3498db; }
+        :root { --primary: #2c3e50; --accent: #e67e22; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --blue: #3498db; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
         
-        /* Menu et Options */
         .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .mode-btn { padding: 10px 20px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
+        .mode-btn.btn-exam-mode { border-color: var(--purple); color: var(--purple); }
+        .mode-btn.btn-exam-mode.active { background: var(--purple); color: white; }
+
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
-        /* Layout Grille pour Impression */
         .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
         .cols-1 { grid-template-columns: 1fr; }
         .cols-2 { grid-template-columns: 1fr 1fr; }
@@ -29,37 +30,33 @@
         .exo-block { border: 1px solid #eee; padding: 20px; border-radius: 10px; page-break-inside: avoid; background: white; text-align: left; }
         .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; }
         
-        /* Boutons */
         .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
-        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-gen { background: var(--blue); color: white; }
         .btn-ans { background: var(--success); color: white; }
         .btn-print { background: var(--primary); color: white; }
-        .btn-exam { background: #8e44ad; color: white; } /* Nouveau bouton violet */
+        .btn-finish { background: var(--purple); color: white; display: none; }
         
-        /* Zone élève */
         .answer-zone { margin: 10px 0; padding: 10px; border-top: 1px dashed #ccc; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 100px; text-align: center; font-weight: bold; }
         .feedback { font-weight: bold; margin-left: 10px; }
 
         .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 10px; }
-        .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; }
+        .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
 
-        /* Style de la note */
-        #score-final { display: none; margin: 20px; padding: 15px; background: var(--primary); color: white; border-radius: 10px; font-size: 1.4rem; font-weight: bold; }
+        #score-final { display: none; margin: 20px; padding: 20px; background: var(--primary); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; animation: fadeIn 0.5s; }
 
-        /* SVG Styles */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
         .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
         .right-angle { fill: none; stroke: var(--danger); stroke-width: 2; }
         .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
-        .measure-text { fill: var(--orange); font-size: 16px; font-weight: bold; fill: #d35400; }
+        .measure-text { fill: #d35400; font-size: 16px; font-weight: bold; }
 
         @media print {
             body { background: white; padding: 0; }
-            .card { box-shadow: none; border: none; max-width: 100%; }
             .mode-selector, .opt-container, .controls, .answer-zone, #score-final { display: none !important; }
             body.print-with-solution .solution { display: block !important; }
-            .exo-block { border: 1px solid #ccc; margin-bottom: 20px; }
         }
     </style>
 </head>
@@ -72,6 +69,7 @@
         <button class="mode-btn active" onclick="setMode('theoreme', this)">Théorème</button>
         <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
         <button class="mode-btn" onclick="setMode('mixte', this)">Mixte</button>
+        <button class="mode-btn btn-exam-mode" onclick="setMode('examen', this)">🎓 Examen</button>
     </div>
 
     <div class="opt-container">
@@ -83,22 +81,19 @@
                 <option value="aleatoire" selected>Aléatoire</option>
             </select>
         </div>
-
         <span>Quantité :</span>
         <select id="exoQty">
             <option value="1">1 (Mode Interactif)</option>
             <option value="4">4 exercices</option>
             <option value="6" selected>6 exercices</option>
-            <option value="8">8 exercices</option>
         </select>
-
         <label><input type="checkbox" id="printSolution" onchange="updatePrintMode()"> Imprimer Corrigé</label>
     </div>
 
     <div class="controls">
-        <button class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
-        <button class="action btn-ans" onclick="toggleSolutions()">👁️ Voir/Cacher Corrigés</button>
-        <button class="action btn-exam" onclick="startExam()">🎓 Mode Examen (Mixte /20)</button>
+        <button id="btn-generate" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
+        <button id="btn-toggle-sol" class="action btn-ans" onclick="toggleSolutions()">👁️ Voir/Cacher Corrigés</button>
+        <button id="btn-finish-exam" class="action btn-finish" onclick="finishExam()">✅ Terminer l'Examen</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
     </div>
 
@@ -113,11 +108,18 @@ let answersMap = {};
 let isExam = false;
 
 function setMode(m, btn) {
-    isExam = false;
-    currentMode = m;
+    isExam = (m === 'examen');
+    currentMode = isExam ? 'mixte' : m;
+    
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('theoreme-sub-opts').style.visibility = (m === 'reciproque') ? 'hidden' : 'visible';
+    
+    document.getElementById('theoreme-sub-opts').style.display = (m === 'reciproque' || isExam) ? 'none' : 'block';
+    document.getElementById('btn-finish-exam').style.display = isExam ? 'inline-block' : 'none';
+    document.getElementById('btn-generate').style.display = isExam ? 'none' : 'inline-block';
+    document.getElementById('btn-toggle-sol').style.display = isExam ? 'none' : 'inline-block';
+    
+    if(isExam) document.getElementById('exoQty').value = "6";
     generateSheet();
 }
 
@@ -137,7 +139,7 @@ function getLetters() {
 }
 
 function generateSheet() {
-    const qty = parseInt(document.getElementById('exoQty').value);
+    const qty = isExam ? 6 : parseInt(document.getElementById('exoQty').value);
     const wrapper = document.getElementById('print-wrapper');
     document.getElementById('score-final').style.display = 'none';
     wrapper.innerHTML = '';
@@ -149,7 +151,9 @@ function generateSheet() {
         exoDiv.className = 'exo-block';
         
         let type;
-        if (currentMode === 'theoreme') {
+        if (isExam) {
+            if(i < 2) type = 'hypo'; else if(i < 4) type = 'cote'; else type = 'recip';
+        } else if (currentMode === 'theoreme') {
             const sel = document.getElementById('calcType').value;
             type = (sel === 'aleatoire') ? (Math.random() > 0.5 ? 'hypo' : 'cote') : sel;
         } else if (currentMode === 'reciproque') {
@@ -160,13 +164,11 @@ function generateSheet() {
         }
 
         exoDiv.innerHTML = `
-            <div class="svg-wrap">
-                <svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg>
-            </div>
+            <div class="svg-wrap"><svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
             <div class="answer-zone">
-                <input type="text" class="user-input" id="input-${i}" placeholder="Résultat">
-                <button class="action" style="padding:5px 10px; background:var(--blue); color:white" onclick="checkAnswer(${i})">OK</button>
+                <input type="text" class="user-input" id="input-${i}" placeholder="${type==='recip'?'oui/non':'Arrondi 0.1'}">
+                ${!isExam ? `<button class="action" style="padding:5px 10px; background:var(--blue); color:white" onclick="checkAnswer(${i})">OK</button>` : ''}
                 <span id="fb-${i}" class="feedback"></span>
             </div>
             <div id="sol-${i}" class="solution"></div>
@@ -181,92 +183,89 @@ function setupExo(id, type) {
     const L = getLetters();
     const rot = Math.floor(Math.random() * 360);
     const svg = document.getElementById('svg-'+id);
-    
     let a = Math.floor(Math.random() * 5) + 3; 
     let b = Math.floor(Math.random() * 5) + 3;
 
     if (type === 'hypo') {
         let hyp = Math.sqrt(a*a + b*b).toFixed(1);
         answersMap[id] = hyp;
-        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. <br>On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <br><b>Calcule $${L[1]}${L[2]}$</b> (arrondi au dixième).`;
-        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de <b>Pythagore</b> :<br>$${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>$${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a} + ${b*b} = ${a*a + b*b}$<br>$${L[1]}${L[2]} = \\sqrt{${a*a + b*b}} \\approx$ <b>${hyp} cm</b>`;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <b>Calcule $${L[1]}${L[2]}$</b>.`;
+        document.getElementById('sol-'+id).innerHTML = `
+            Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de Pythagore :<br>
+            $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>
+            $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2$<br>
+            $${L[1]}${L[2]}^2 = ${a*a} + ${b*b} = ${a*a+b*b}$<br>
+            $${L[1]}${L[2]} = \\sqrt{${a*a+b*b}} \\approx$ <b>${hyp} cm</b>`;
         drawTriangle(svg, rot, a, b, "?", L);
-    } 
-    else if (type === 'cote') {
-        let hyp = Math.max(a, b) + Math.floor(Math.random() * 3) + 2;
-        let coteManquant = Math.sqrt(hyp*hyp - a*a).toFixed(1);
-        answersMap[id] = coteManquant;
-        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. <br>On donne l'hypoténuse $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <br><b>Calcule $${L[0]}${L[2]}$</b> (arrondi au dixième).`;
-        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de <b>Pythagore</b> :<br>$${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>$${hyp}^2 = ${a}^2 + ${L[0]}${L[2]}^2$<br>$${(hyp*hyp).toFixed(1)} = ${a*a} + ${L[0]}${L[2]}^2$<br>$${L[0]}${L[2]}^2 = ${(hyp*hyp).toFixed(1)} - ${a*a} = ${(hyp*hyp - a*a).toFixed(1)}$<br>$${L[0]}${L[2]} = \\sqrt{${(hyp*hyp - a*a).toFixed(1)}} \\approx$ <b>${coteManquant} cm</b>`;
+    } else if (type === 'cote') {
+        let hyp = Math.max(a, b) + 3;
+        let coteM = Math.sqrt(hyp*hyp - a*a).toFixed(1);
+        answersMap[id] = coteM;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. On donne $${L[1]}${L[2]} = ${hyp}$ cm (hypoténuse) et $${L[0]}${L[1]} = ${a}$ cm. <b>Calcule $${L[0]}${L[2]}$</b>.`;
+        document.getElementById('sol-'+id).innerHTML = `
+            Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de Pythagore :<br>
+            $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>
+            $${hyp}^2 = ${a}^2 + ${L[0]}${L[2]}^2$<br>
+            $${hyp*hyp} = ${a*a} + ${L[0]}${L[2]}^2$<br>
+            $${L[0]}${L[2]}^2 = ${hyp*hyp} - ${a*a} = ${hyp*hyp-a*a}$<br>
+            $${L[0]}${L[2]} = \\sqrt{${hyp*hyp-a*a}} \\approx$ <b>${coteM} cm</b>`;
         drawTriangle(svg, rot, a, "?", hyp, L);
-    }
-    else {
+    } else {
         const isRight = Math.random() > 0.5;
         let hyp = isRight ? Math.sqrt(a*a + b*b) : (Math.sqrt(a*a + b*b) + 1.2);
         hyp = parseFloat(hyp.toFixed(1));
         answersMap[id] = isRight ? "oui" : "non";
-        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ a pour côtés : <br>$${L[0]}${L[1]} = ${a}$ cm, $${L[0]}${L[2]} = ${b}$ cm et $${L[1]}${L[2]} = ${hyp}$ cm. <br><b>Est-il rectangle ?</b> (répondre par oui/non)`;
-        document.getElementById('sol-'+id).innerHTML = `Côté le plus long : $${L[1]}${L[2]}^2 = ${hyp}^2 = ${(hyp*hyp).toFixed(2)}$<br>Somme des carrés : $${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a} + ${b*b}$<br>${isRight ? "On constate l'égalité. D'après la <b>réciproque</b> du théorème de Pythagore, le triangle est rectangle." : "L'égalité n'est pas vérifiée. Le triangle n'est pas rectangle."}`;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ a pour côtés : $${L[0]}${L[1]} = ${a}$ cm, $${L[0]}${L[2]} = ${b}$ cm et $${L[1]}${L[2]} = ${hyp}$ cm. <b>Est-il rectangle ?</b>`;
+        document.getElementById('sol-'+id).innerHTML = `
+            D'une part, le carré du plus long côté :<br>
+            $${L[1]}${L[2]}^2 = ${hyp}^2 = ${(hyp*hyp).toFixed(2)}$<br>
+            D'autre part, la somme des carrés des deux autres côtés :<br>
+            $${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a} + ${b*b} = ${a*a+b*b}$<br>
+            ${isRight ? "On constate que $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$. D'après la <b>réciproque</b> du théorème de Pythagore, le triangle est rectangle." : "On constate que $${L[1]}${L[2]}^2 \\neq ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$. Le triangle n'est pas rectangle."}`;
         drawTriangle(svg, rot, a, b, hyp, L, false);
     }
 }
 
-function checkAnswer(id) {
+function checkAnswer(id, silent = false) {
     const val = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
     const correct = answersMap[id];
     const fb = document.getElementById('fb-'+id);
-    
-    if (correct === "oui" || correct === "non") {
-        if(val === correct) { fb.textContent = "✅"; fb.style.color = "var(--success)"; fb.dataset.correct = "1"; }
-        else { fb.textContent = "❌"; fb.style.color = "var(--danger)"; fb.dataset.correct = "0"; }
-    } else {
-        if(Math.abs(parseFloat(val) - parseFloat(correct)) < 0.2) { fb.textContent = "✅"; fb.style.color = "var(--success)"; fb.dataset.correct = "1"; }
-        else { fb.textContent = "❌"; fb.style.color = "var(--danger)"; fb.dataset.correct = "0"; }
+    let isCorrect = (correct === "oui" || correct === "non") ? (val === correct) : (Math.abs(parseFloat(val) - parseFloat(correct)) < 0.2);
+
+    if(!silent) {
+        fb.textContent = isCorrect ? "✅" : "❌";
+        fb.style.color = isCorrect ? "var(--success)" : "var(--danger)";
     }
-    if(isExam) updateScore();
+    return isCorrect;
+}
+
+function finishExam() {
+    let points = 0;
+    for(let i=0; i<6; i++) {
+        if(checkAnswer(i)) points++;
+        document.getElementById('sol-'+i).style.display = 'block';
+    }
+    const note = ((points / 6) * 20).toFixed(1);
+    const scoreDiv = document.getElementById('score-final');
+    scoreDiv.style.display = 'block';
+    scoreDiv.innerHTML = `🏁 Examen terminé !<br>Note : ${note} / 20<br><span style="font-size:1rem">(${points} juste(s) sur 6)</span>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
-    const xA = 150, yA = 200;
-    const xB = 300, yB = 200;
-    const xC = 150, yC = 80;
+    const xA=150, yA=200, xB=300, yB=200, xC=150, yC=80;
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.setAttribute("transform", `rotate(${rot}, 200, 150)`);
     group.innerHTML = `
         <path d="M ${xA} ${yA} L ${xB} ${yB} L ${xC} ${yC} Z" class="triangle-path" />
         ${hasRightAngle ? `<path d="M ${xA} ${yA-20} L ${xA+20} ${yA-20} L ${xA+20} ${yA}" class="right-angle"/>` : ''}
-        <text x="${xA-25}" y="${yA+20}" class="label-point" transform="rotate(${-rot}, ${xA-25}, ${yA+20})">${L[0]}</text>
-        <text x="${xB+10}" y="${yB+10}" class="label-point" transform="rotate(${-rot}, ${xB+10}, ${yB+10})">${L[1]}</text>
-        <text x="${xC-10}" y="${yC-15}" class="label-point" transform="rotate(${-rot}, ${xC-10}, ${yC-15})">${L[2]}</text>
-        <text x="${(xA+xB)/2}" y="${yA+25}" class="measure-text" transform="rotate(${-rot}, ${(xA+xB)/2}, ${yA+25})">${a} cm</text>
-        <text x="${xA-50}" y="${(yA+yC)/2}" class="measure-text" transform="rotate(${-rot}, ${xA-50}, ${(yA+yC)/2})">${b === '?' ? '?' : b + ' cm'}</text>
-        <text x="${(xB+xC)/2 + 15}" y="${(yB+yC)/2 - 10}" class="measure-text" transform="rotate(${-rot}, ${(xB+xC)/2+15}, ${(yB+yC)/2-10})">${c === '?' ? '?' : c + ' cm'}</text>
-    `;
-    svg.innerHTML = '';
-    svg.appendChild(group);
-}
-
-// LOGIQUE EXAMEN
-function startExam() {
-    isExam = true;
-    currentMode = 'mixte';
-    document.getElementById('exoQty').value = "6";
-    generateSheet();
-    const scoreDiv = document.getElementById('score-final');
-    scoreDiv.style.display = 'block';
-    scoreDiv.innerHTML = "📝 Mode Examen activé. Note actuelle : ... / 20";
-}
-
-function updateScore() {
-    const fbs = document.querySelectorAll('.feedback');
-    let points = 0;
-    let count = 0;
-    fbs.forEach(fb => {
-        if(fb.dataset.correct === "1") points++;
-        if(fb.dataset.correct !== undefined) count++;
-    });
-    const note = ((points / 6) * 20).toFixed(1);
-    document.getElementById('score-final').innerHTML = `⭐ Note : ${note} / 20 <small>(${points} juste(s) sur 6)</small>`;
+        <text x="${xA-25}" y="${yA+20}" class="label-point" transform="rotate(${-rot},${xA-25},${yA+20})">${L[0]}</text>
+        <text x="${xB+10}" y="${yB+10}" class="label-point" transform="rotate(${-rot},${xB+10},${yB+10})">${L[1]}</text>
+        <text x="${xC-10}" y="${yC-15}" class="label-point" transform="rotate(${-rot},${xC-10},${yC-15})">${L[2]}</text>
+        <text x="${(xA+xB)/2}" y="${yA+25}" class="measure-text" transform="rotate(${-rot},${(xA+xB)/2},${yA+25})">${a} cm</text>
+        <text x="${xA-50}" y="${(yA+yC)/2}" class="measure-text" transform="rotate(${-rot},${xA-50},${(yA+yC)/2})">${b==='?'?'?':b+' cm'}</text>
+        <text x="${(xB+xC)/2+15}" y="${(yB+yC)/2-10}" class="measure-text" transform="rotate(${-rot},${(xB+xC)/2+15},${(yB+yC)/2-10})">${c==='?'?'?':c+' cm'}</text>`;
+    svg.innerHTML = ''; svg.appendChild(group);
 }
 
 generateSheet();
