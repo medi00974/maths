@@ -311,7 +311,12 @@ function checkSingleAnswer(id, mode) {
 
 function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
-    if(isExam && !nom) { alert("Merci d'entrer ton nom avant de terminer."); return; }
+    const classe = document.getElementById('classe-eleve').value; // Récupère le numéro (ex: 304)
+    
+    if(isExam && (!nom || !classe)) { 
+        alert("Merci d'entrer ton nom ET ta classe (ex: 304) avant de terminer."); 
+        return; 
+    }
 
     let correctCount = 0;
     let details = "";
@@ -324,6 +329,28 @@ function finishExam() {
             details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
         }
     }
+    const score = ((correctCount / qty) * 20).toFixed(1);
+    const resDiv = document.getElementById('exam-result');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `Examen Terminé ! Note : ${score} / 20 <br> <small>${correctCount} bonnes réponses sur ${qty}</small>`;
+    
+    toggleAllSolutions();
+    document.getElementById('btn-submit-exam').style.display = 'none';
+
+    if(isExam && WEB_APP_URL !== "TON_URL_ICI") {
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ 
+                nom: nom, 
+                classe: classe, // Envoie "304"
+                note: score, 
+                details: details || "Thalès : Parfait" 
+            })
+        });
+        alert("Résultats envoyés au tableau de bord !");
+    }
+}
     const score = ((correctCount / qty) * 20).toFixed(1);
     const resDiv = document.getElementById('exam-result');
     resDiv.style.display = 'block';
