@@ -18,9 +18,11 @@
         .mode-btn { padding: 8px 15px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
         
-        /* Champ Nom pour le mode Examen */
+        /* Champ Nom et Classe pour le mode Examen */
         #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
-        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; text-align: center; }
+        .input-info { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); font-size: 1rem; text-align: center; }
+        .input-nom { width: 250px; }
+        .input-classe { width: 100px; }
 
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 10px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
@@ -70,19 +72,20 @@
 <body>
 
 <div class="card">
+    <h1>📐 Générateur Thalès</h1>
+
     <div class="mode-selector">
         <button class="mode-btn active" onclick="setMode('emboite', this)">Emboîté</button>
         <button class="mode-btn" onclick="setMode('papillon', this)">Papillon</button>
         <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
-        <button class="mode-btn btn-exam" onclick="startExam(this)">🎓 Mode Examen (Sur 20)</button>
+        <button class="mode-btn btn-exam" onclick="startExam(this)">🎓 Mode Examen</button>
     </div>
 
-
     <div id="nom-eleve-container">
-        <label><strong>Identification :</strong></label><br><br>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
-            <input type="text" id="classe-eleve" class="input-nom" style="width: 80px;" placeholder="Classe (ex: 304)">
+        <label><strong>Identification de l'élève :</strong></label><br><br>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <input type="text" id="nom-eleve" class="input-info input-nom" placeholder="NOM Prénom">
+            <input type="text" id="classe-eleve" class="input-info input-classe" placeholder="Classe (ex: 304)">
         </div>
     </div>
 
@@ -105,7 +108,6 @@
             <option value="4">4 exercices</option>
             <option value="6" selected>6 exercices</option>
             <option value="8">8 exercices</option>
-            <option value="12">12 exercices</option>
         </select>
     </div>
 
@@ -113,7 +115,7 @@
         <button id="btn-gen-main" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
         <button id="btn-ans-main" class="action btn-ans" onclick="toggleAllSolutions()">👁️ Voir/Cacher Corrigés</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
-        <button id="btn-submit-exam" class="action btn-ans" style="display:none; background:#8e44ad" onclick="finishExam()">Terminer l'examen</button>
+        <button id="btn-submit-exam" class="action btn-ans" style="display:none; background:#8e44ad" onclick="finishExam()">✅ Terminer l'Examen</button>
     </div>
 
     <div id="print-wrapper" class="print-cols cols-2"></div>
@@ -129,7 +131,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnjP1cLDJqFJ4zcj5Td2aAdP2-zOOiZncJkT_rjxtdpONiO8eW5g40UZs3U3UKDVV4zA/exec"; 
+const WEB_APP_URL = "TON_URL_ICI"; 
 // ------------------------------------
 
 let currentMode = 'emboite';
@@ -204,8 +206,8 @@ function generateSheet() {
             </div>
             <div id="enonce-${i}" class="enonce"></div>
             <div class="answer-zone">
-                <input type="text" class="user-input" id="input-${i}" placeholder="${subMode === 'reciproque' ? 'oui/non' : 'Réponse...'}">
-                ${!isExam ? `<button class="action" style="padding:8px 15px; background:var(--primary); color:white; border-radius:5px" onclick="checkSingleAnswer(${i}, '${subMode}')">Vérifier</button>` : ''}
+                <input type="text" class="user-input" id="input-${i}" placeholder="${subMode === 'reciproque' ? 'oui/non' : 'Nombre'}">
+                ${!isExam ? `<button class="action" style="padding:8px 15px; background:var(--primary); color:white; border-radius:5px" onclick="checkSingleAnswer(${i}, '${subMode}')">OK</button>` : ''}
                 <div id="fb-${i}" class="feedback"></div>
             </div>
             <div id="sol-${i}" class="solution"></div>
@@ -311,7 +313,7 @@ function checkSingleAnswer(id, mode) {
 
 function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
-    const classe = document.getElementById('classe-eleve').value; // Récupère le numéro (ex: 304)
+    const classe = document.getElementById('classe-eleve').value;
     
     if(isExam && (!nom || !classe)) { 
         alert("Merci d'entrer ton nom ET ta classe (ex: 304) avant de terminer."); 
@@ -332,7 +334,7 @@ function finishExam() {
     const score = ((correctCount / qty) * 20).toFixed(1);
     const resDiv = document.getElementById('exam-result');
     resDiv.style.display = 'block';
-    resDiv.innerHTML = `Examen Terminé ! Note : ${score} / 20 <br> <small>${correctCount} bonnes réponses sur ${qty}</small>`;
+    resDiv.innerHTML = `🏁 Terminé ! Note : ${score} / 20 (${correctCount} / ${qty})`;
     
     toggleAllSolutions();
     document.getElementById('btn-submit-exam').style.display = 'none';
@@ -343,27 +345,10 @@ function finishExam() {
             mode: 'no-cors',
             body: JSON.stringify({ 
                 nom: nom, 
-                classe: classe, // Envoie "304"
+                classe: classe,
                 note: score, 
-                details: details || "Thalès : Parfait" 
+                details: details || "Parfait" 
             })
-        });
-        alert("Résultats envoyés au tableau de bord !");
-    }
-}
-    const score = ((correctCount / qty) * 20).toFixed(1);
-    const resDiv = document.getElementById('exam-result');
-    resDiv.style.display = 'block';
-    resDiv.innerHTML = `Examen Terminé ! Note : ${score} / 20 <br> <small>${correctCount} bonnes réponses sur ${qty}</small>`;
-    
-    toggleAllSolutions();
-    document.getElementById('btn-submit-exam').style.display = 'none';
-
-    if(isExam && WEB_APP_URL !== "TON_URL_ICI") {
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ nom: nom, note: score, details: details || "Thalès : Parfait" })
         });
         alert("Résultats envoyés au tableau de bord !");
     }
@@ -379,12 +364,8 @@ function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
         <path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/>
         <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
     
-    if(m1L !== "" && m1L !== undefined) {
-        html += `<line x1="${Ax-45}" y1="${Ay}" x2="${Dx-45}" y2="${Dy}" class="dimension-line" />`;
-    }
-    if(m2L !== "" && m2L !== undefined) {
-        html += `<line x1="${Ax+45}" y1="${Ay}" x2="${Ex+45}" y2="${Ey}" class="dimension-line" />`;
-    }
+    if(m1L !== "" && m1L !== undefined) html += `<line x1="${Ax-45}" y1="${Ay}" x2="${Dx-45}" y2="${Dy}" class="dimension-line" />`;
+    if(m2L !== "" && m2L !== undefined) html += `<line x1="${Ax+45}" y1="${Ay}" x2="${Ex+45}" y2="${Ey}" class="dimension-line" />`;
 
     g.innerHTML = html;
     
@@ -396,10 +377,8 @@ function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
     
     addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -30, 0);
     addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", -70, 0); 
-
     addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 30, 0);
     addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", 70, 0);
-
     addTxt(g, rot, (Bx+Cx)/2, (By+Cy)/2, bS, "measure-text", 0, -20);
     addTxt(g, rot, (Dx+Ex)/2, (Dy+Ey)/2, bL, "measure-text", 0, 35);
 }
