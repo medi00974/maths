@@ -77,9 +77,13 @@
         <button class="mode-btn btn-exam" onclick="startExam(this)">🎓 Mode Examen (Sur 20)</button>
     </div>
 
+
     <div id="nom-eleve-container">
-        <label><strong>Nom de l'élève :</strong></label><br><br>
-        <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
+        <label><strong>Identification :</strong></label><br><br>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
+            <input type="text" id="classe-eleve" class="input-nom" style="width: 80px;" placeholder="Classe (ex: 304)">
+        </div>
     </div>
 
     <div id="exam-result"></div>
