@@ -21,6 +21,9 @@
         .mode-btn.btn-exam-mode { border-color: var(--purple); color: var(--purple); }
         .mode-btn.btn-exam-mode.active { background: var(--purple); color: white; }
 
+        #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
+        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; text-align: center; }
+
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
         .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
@@ -28,7 +31,7 @@
         .cols-2 { grid-template-columns: 1fr 1fr; }
 
         .exo-block { border: 1px solid #eee; padding: 20px; border-radius: 10px; page-break-inside: avoid; background: white; text-align: left; }
-        .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; }
+        .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; background: #fff; }
         
         .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
         button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
@@ -39,16 +42,25 @@
         
         .answer-zone { margin: 10px 0; padding: 10px; border-top: 1px dashed #ccc; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 100px; text-align: center; font-weight: bold; }
-        .feedback { font-weight: bold; margin-left: 10px; }
+        .feedback { font-weight: bold; margin-left: 10px; font-size: 1.2rem; }
 
+        .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 10px; }
         .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
-        #score-final { display: none; margin: 20px; padding: 20px; background: var(--primary); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; }
 
-        #nom-eleve-container { margin-bottom: 15px; display: none; }
-        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; }
+        #score-final { display: none; margin: 20px; padding: 20px; background: var(--primary); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Styles SVG */
+        .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
+        .right-angle { fill: none; stroke: var(--danger); stroke-width: 2; }
+        .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
+        .measure-text { fill: #d35400; font-size: 16px; font-weight: bold; }
 
         @media print {
+            body { background: white; padding: 0; }
             .mode-selector, .opt-container, .controls, .answer-zone, #score-final, #nom-eleve-container { display: none !important; }
+            .solution { display: block !important; }
         }
     </style>
 </head>
@@ -65,7 +77,8 @@
     </div>
 
     <div id="nom-eleve-container">
-        <input type="text" id="nom-eleve" class="input-nom" placeholder="Ton Nom et Prénom">
+        <label><strong>Nom de l'élève :</strong></label><br><br>
+        <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
     </div>
 
     <div class="opt-container">
@@ -79,9 +92,9 @@
         </div>
         <span>Quantité :</span>
         <select id="exoQty">
-            <option value="1">1</option>
-            <option value="4">4</option>
-            <option value="6" selected>6</option>
+            <option value="1">1 (Mode Interactif)</option>
+            <option value="4">4 exercices</option>
+            <option value="6" selected>6 exercices</option>
         </select>
     </div>
 
@@ -98,7 +111,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-NQxR8Vx6bMAzDty10VK6U2-oBQ58Awe5NxEOaDcbXBXaPBZJPgBu5PMRQ-2i59KZ/exec"; // REMPLACE PAR TON URL DE DEPLOIEMENT !
+const WEB_APP_URL = "TON_URL_ICI"; // COLLE TON LIEN ICI
 // ------------------------------------
 
 let currentMode = 'theoreme';
@@ -108,6 +121,7 @@ let isExam = false;
 function setMode(m, btn) {
     isExam = (m === 'examen');
     currentMode = isExam ? 'mixte' : m;
+    
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     
@@ -115,9 +129,21 @@ function setMode(m, btn) {
     document.getElementById('theoreme-sub-opts').style.display = (m === 'reciproque' || isExam) ? 'none' : 'block';
     document.getElementById('btn-finish-exam').style.display = isExam ? 'inline-block' : 'none';
     document.getElementById('btn-generate').style.display = isExam ? 'none' : 'inline-block';
+    document.getElementById('btn-toggle-sol').style.display = isExam ? 'none' : 'inline-block';
     
     if(isExam) document.getElementById('exoQty').value = "6";
     generateSheet();
+}
+
+function toggleSolutions() {
+    const sols = document.querySelectorAll('.solution');
+    if(sols.length === 0) return;
+    const isHidden = sols[0].style.display === 'none' || sols[0].style.display === '';
+    sols.forEach(s => s.style.display = isHidden ? 'block' : 'none');
+}
+
+function getLetters() {
+    return "ABCDEFGHJKLMNPQRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 3);
 }
 
 function generateSheet() {
@@ -125,26 +151,32 @@ function generateSheet() {
     const wrapper = document.getElementById('print-wrapper');
     document.getElementById('score-final').style.display = 'none';
     wrapper.innerHTML = '';
+    wrapper.className = (qty === 1) ? 'print-cols cols-1' : 'print-cols cols-2';
     answersMap = {};
 
     for (let i = 0; i < qty; i++) {
         const exoDiv = document.createElement('div');
         exoDiv.className = 'exo-block';
+        
         let type;
         if (isExam) {
             if(i < 2) type = 'hypo'; else if(i < 4) type = 'cote'; else type = 'recip';
         } else if (currentMode === 'theoreme') {
             const sel = document.getElementById('calcType').value;
             type = (sel === 'aleatoire') ? (Math.random() > 0.5 ? 'hypo' : 'cote') : sel;
-        } else if (currentMode === 'reciproque') { type = 'recip'; }
-        else { type = Math.random() < 0.33 ? 'hypo' : (Math.random() < 0.66 ? 'cote' : 'recip'); }
+        } else if (currentMode === 'reciproque') {
+            type = 'recip';
+        } else {
+            const choice = Math.random();
+            type = (choice < 0.33) ? 'hypo' : (choice < 0.66 ? 'cote' : 'recip');
+        }
 
         exoDiv.innerHTML = `
             <div class="svg-wrap"><svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg></div>
-            <div id="enonce-${i}" style="margin-bottom:10px"></div>
+            <div id="enonce-${i}" class="enonce"></div>
             <div class="answer-zone">
                 <input type="text" class="user-input" id="input-${i}" placeholder="${type==='recip'?'oui/non':'Nombre'}">
-                ${!isExam ? `<button onclick="checkAnswer(${i})" style="cursor:pointer">OK</button>` : ''}
+                ${!isExam ? `<button class="action" style="padding:5px 10px; background:var(--blue); color:white" onclick="checkAnswer(${i})">OK</button>` : ''}
                 <span id="fb-${i}" class="feedback"></span>
             </div>
             <div id="sol-${i}" class="solution"></div>
@@ -155,68 +187,106 @@ function generateSheet() {
     MathJax.typesetPromise();
 }
 
-// Logique de création d'exo (simplifiée pour l'espace, garde ta version complète ici)
 function setupExo(id, type) {
-    const L = "ABCDEFGHJKLMNPQRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 3);
-    const a = Math.floor(Math.random() * 5) + 3; 
-    const b = Math.floor(Math.random() * 5) + 3;
+    const L = getLetters();
+    const rot = Math.floor(Math.random() * 360);
     const svg = document.getElementById('svg-'+id);
+    let a = Math.floor(Math.random() * 5) + 3; 
+    let b = Math.floor(Math.random() * 5) + 3;
 
     if (type === 'hypo') {
-        let res = Math.sqrt(a*a+b*b).toFixed(1);
-        answersMap[id] = res;
-        document.getElementById('enonce-'+id).innerHTML = `Triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$. $${L[0]}${L[1]}=${a}$ et $${L[0]}${L[2]}=${b}$. Calcule $${L[1]}${L[2]}$.`;
-        document.getElementById('sol-'+id).innerHTML = `Égalité : $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$ <br> $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$ <br> Résultat : <b>${res}</b>`;
+        let hyp = Math.sqrt(a*a + b*b).toFixed(1);
+        answersMap[id] = hyp;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <b>Calcule $${L[1]}${L[2]}$</b>.`;
+        document.getElementById('sol-'+id).innerHTML = `
+            Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de Pythagore :<br>
+            $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>
+            $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2$<br>
+            $${L[1]}${L[2]}^2 = ${a*a} + ${b*b} = ${a*a+b*b}$<br>
+            $${L[1]}${L[2]} = \\sqrt{${a*a+b*b}} \\approx$ <b>${hyp} cm</b>`;
+        drawTriangle(svg, rot, a, b, "?", L);
     } else if (type === 'cote') {
-        let h = a + 4;
-        let res = Math.sqrt(h*h-a*a).toFixed(1);
-        answersMap[id] = res;
-        document.getElementById('enonce-'+id).innerHTML = `Triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$. Hypotenuse $${L[1]}${L[2]}=${h}$ et $${L[0]}${L[1]}=${a}$. Calcule $${L[0]}${L[2]}$.`;
-        document.getElementById('sol-'+id).innerHTML = `Égalité : $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$ <br> $${h}^2 = ${a}^2 + ${L[0]}${L[2]}^2$ <br> $${L[0]}${L[2]}^2 = ${h*h-a*a}$ <br> Résultat : <b>${res}</b>`;
+        let hyp = Math.max(a, b) + 3;
+        let coteM = Math.sqrt(hyp*hyp - a*a).toFixed(1);
+        answersMap[id] = coteM;
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. Hypotenuse $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <b>Calcule $${L[0]}${L[2]}$</b>.`;
+        document.getElementById('sol-'+id).innerHTML = `
+            Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de Pythagore :<br>
+            $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>
+            $${hyp}^2 = ${a}^2 + ${L[0]}${L[2]}^2$<br>
+            $${L[0]}${L[2]}^2 = ${hyp*hyp} - ${a*a} = ${hyp*hyp-a*a}$<br>
+            $${L[0]}${L[2]} = \\sqrt{${hyp*hyp-a*a}} \\approx$ <b>${coteM} cm</b>`;
+        drawTriangle(svg, rot, a, "?", hyp, L);
     } else {
-        const isR = Math.random() > 0.5;
-        let h = isR ? parseFloat(Math.sqrt(a*a+b*b).toFixed(1)) : parseFloat((Math.sqrt(a*a+b*b)+1.5).toFixed(1));
-        answersMap[id] = isR ? "oui" : "non";
-        document.getElementById('enonce-'+id).innerHTML = `$${L[0]}${L[1]}=${a}$, $${L[0]}${L[2]}=${b}$, $${L[1]}${L[2]}=${h}$. Rectangle ?`;
-        document.getElementById('sol-'+id).innerHTML = `Plus long côté : $${h}^2 = ${(h*h).toFixed(2)}$ <br> Somme : $${a}^2+${b}^2 = ${a*a+b*b}$ <br> Rectangle : <b>${isR?'Oui':'Non'}</b>`;
+        const isRight = Math.random() > 0.5;
+        let hyp = isRight ? Math.sqrt(a*a + b*b) : (Math.sqrt(a*a + b*b) + 1.2);
+        hyp = parseFloat(hyp.toFixed(1));
+        answersMap[id] = isRight ? "oui" : "non";
+        document.getElementById('enonce-'+id).innerHTML = `On donne $${L[0]}${L[1]} = ${a}$ cm, $${L[0]}${L[2]} = ${b}$ cm et $${L[1]}${L[2]} = ${hyp}$ cm. <b>Le triangle est-il rectangle ?</b>`;
+        document.getElementById('sol-'+id).innerHTML = `
+            Côté le plus long : $${L[1]}${L[2]}^2 = ${hyp}^2 = ${(hyp*hyp).toFixed(2)}$<br>
+            Somme des carrés : $${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$<br>
+            ${isRight ? "L'égalité est vérifiée, il est <b>rectangle</b>." : "Pas d'égalité, il n'est <b>pas rectangle</b>."}`;
+        drawTriangle(svg, rot, a, b, hyp, L, false);
     }
 }
 
-function checkAnswer(id) {
+function checkAnswer(id, silent = false) {
     const val = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
-    const corr = answersMap[id];
-    const isC = (corr === "oui" || corr === "non") ? (val === corr) : (Math.abs(parseFloat(val) - parseFloat(corr)) < 0.2);
-    document.getElementById('fb-'+id).textContent = isC ? "✅" : "❌";
-    document.getElementById('fb-'+id).style.color = isC ? "green" : "red";
-    return isC;
+    const correct = answersMap[id];
+    const fb = document.getElementById('fb-'+id);
+    let isCorrect = (correct === "oui" || correct === "non") ? (val === correct) : (Math.abs(parseFloat(val) - parseFloat(correct)) < 0.2);
+
+    if(!silent) {
+        fb.textContent = isCorrect ? "✅" : "❌";
+        fb.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+    }
+    return isCorrect;
 }
 
 function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
-    if(!nom) { alert("Entre ton nom d'abord !"); return; }
+    if(isExam && !nom) { alert("Merci d'entrer ton nom avant de terminer."); return; }
 
     let points = 0;
     let details = "";
     for(let i=0; i<6; i++) {
-        let correct = checkAnswer(i);
-        if(correct) points++;
-        else details += `Exo ${i+1} faux (réponse: ${document.getElementById('input-'+i).value}). `;
+        const ok = checkAnswer(i);
+        if(ok) points++; else details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
         document.getElementById('sol-'+i).style.display = 'block';
     }
     const note = ((points / 6) * 20).toFixed(1);
-    document.getElementById('score-final').style.display = 'block';
-    document.getElementById('score-final').innerHTML = `Note : ${note} / 20`;
+    const scoreDiv = document.getElementById('score-final');
+    scoreDiv.style.display = 'block';
+    scoreDiv.innerHTML = `🏁 Terminé ! Note : ${note}/20 (${points}/6)`;
 
-    // ENVOI AU GOOGLE SHEET
-    if(WEB_APP_URL !== "TON_URL_ICI") {
+    if(isExam && WEB_APP_URL !== "TON_URL_ICI") {
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({ nom: nom, note: note, details: details || "Sans fautes" })
+            body: JSON.stringify({ nom: nom, note: note, details: details || "Parfait" })
         });
-        alert("Note envoyée au professeur !");
+        alert("Résultats envoyés au tableau de bord !");
     }
 }
+
+function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
+    const xA=150, yA=200, xB=300, yB=200, xC=150, yC=80;
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.setAttribute("transform", `rotate(${rot}, 200, 150)`);
+    group.innerHTML = `
+        <path d="M ${xA} ${yA} L ${xB} ${yB} L ${xC} ${yC} Z" class="triangle-path" />
+        ${hasRightAngle ? `<path d="M ${xA} ${yA-20} L ${xA+20} ${yA-20} L ${xA+20} ${yA}" class="right-angle"/>` : ''}
+        <text x="${xA-25}" y="${yA+20}" class="label-point" transform="rotate(${-rot},${xA-25},${yA+20})">${L[0]}</text>
+        <text x="${xB+10}" y="${yB+10}" class="label-point" transform="rotate(${-rot},${xB+10},${yB+10})">${L[1]}</text>
+        <text x="${xC-10}" y="${yC-15}" class="label-point" transform="rotate(${-rot},${xC-10},${yC-15})">${L[2]}</text>
+        <text x="${(xA+xB)/2}" y="${yA+25}" class="measure-text" transform="rotate(${-rot},${(xA+xB)/2},${yA+25})">${a} cm</text>
+        <text x="${xA-50}" y="${(yA+yC)/2}" class="measure-text" transform="rotate(${-rot},${xA-50},${(yA+yC)/2})">${b==='?'?'?':b+' cm'}</text>
+        <text x="${(xB+xC)/2+15}" y="${(yB+yC)/2-10}" class="measure-text" transform="rotate(${-rot},${(xB+xC)/2+15},${(yB+yC)/2-10})">${c==='?'?'?':c+' cm'}</text>`;
+    svg.innerHTML = ''; svg.appendChild(group);
+}
+
+generateSheet();
 </script>
 </body>
 </html>
