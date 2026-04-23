@@ -11,12 +11,17 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --light: #ecf0f1; --orange: #e67e22; --danger: #e74c3c; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --light: #ecf0f1; --orange: #e67e22; --danger: #e74c3c; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
         .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .mode-btn { padding: 8px 15px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
+        
+        /* Champ Nom pour le mode Examen */
+        #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
+        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; text-align: center; }
+
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 10px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
         .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
@@ -55,7 +60,7 @@
         @media print {
             body { background: white; padding: 0; }
             .card { box-shadow: none; border: none; max-width: 100%; }
-            .mode-selector, .opt-container, .controls, .answer-zone { display: none !important; }
+            .mode-selector, .opt-container, .controls, .answer-zone, #nom-eleve-container { display: none !important; }
             body:not(.print-with-solution) .solution { display: none !important; }
             body.print-with-solution .solution { display: block !important; border: 1px solid #ccc; background: white; }
             .exo-block { border: 1px solid #ccc; margin-bottom: 20px; }
@@ -70,6 +75,11 @@
         <button class="mode-btn" onclick="setMode('papillon', this)">Papillon</button>
         <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
         <button class="mode-btn btn-exam" onclick="startExam(this)">🎓 Mode Examen (Sur 20)</button>
+    </div>
+
+    <div id="nom-eleve-container">
+        <label><strong>Nom de l'élève :</strong></label><br><br>
+        <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
     </div>
 
     <div id="exam-result"></div>
@@ -89,7 +99,7 @@
         <select id="exoQty">
             <option value="1">1 (Interactif)</option>
             <option value="4">4 exercices</option>
-            <option value="6">6 exercices</option>
+            <option value="6" selected>6 exercices</option>
             <option value="8">8 exercices</option>
             <option value="12">12 exercices</option>
         </select>
@@ -114,14 +124,18 @@
 </svg>
 
 <script>
+// --- CONFIGURATION GOOGLE SHEETS ---
+const WEB_APP_URL = "TON_URL_ICI"; 
+// ------------------------------------
+
 let currentMode = 'emboite';
 let answersMap = {}; 
 let isExam = false;
-let examScore = 0;
 
 function setMode(m, b) {
     isExam = false;
     currentMode = m;
+    document.getElementById('nom-eleve-container').style.display = 'none';
     document.getElementById('exam-result').style.display = 'none';
     document.getElementById('btn-submit-exam').style.display = 'none';
     document.getElementById('btn-gen-main').style.display = 'inline-block';
@@ -135,6 +149,7 @@ function startExam(btn) {
     currentMode = 'examen';
     document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
     btn.classList.add('active');
+    document.getElementById('nom-eleve-container').style.display = 'block';
     document.getElementById('exoQty').value = "6";
     document.getElementById('exam-result').style.display = 'none';
     document.getElementById('btn-submit-exam').style.display = 'inline-block';
@@ -291,18 +306,36 @@ function checkSingleAnswer(id, mode) {
 }
 
 function finishExam() {
+    const nom = document.getElementById('nom-eleve').value;
+    if(isExam && !nom) { alert("Merci d'entrer ton nom avant de terminer."); return; }
+
     let correctCount = 0;
+    let details = "";
     const qty = 6;
     for(let i=0; i<qty; i++) {
         const isCorrect = checkSingleAnswer(i, answersMap[i].type === 'reciproque' ? 'reciproque' : 'calcul');
-        if(isCorrect) correctCount++;
+        if(isCorrect) {
+            correctCount++;
+        } else {
+            details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
+        }
     }
     const score = ((correctCount / qty) * 20).toFixed(1);
     const resDiv = document.getElementById('exam-result');
     resDiv.style.display = 'block';
     resDiv.innerHTML = `Examen Terminé ! Note : ${score} / 20 <br> <small>${correctCount} bonnes réponses sur ${qty}</small>`;
+    
     toggleAllSolutions();
     document.getElementById('btn-submit-exam').style.display = 'none';
+
+    if(isExam && WEB_APP_URL !== "TON_URL_ICI") {
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ nom: nom, note: score, details: details || "Thalès : Parfait" })
+        });
+        alert("Résultats envoyés au tableau de bord !");
+    }
 }
 
 function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
@@ -315,7 +348,6 @@ function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
         <path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/>
         <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
     
-    // Ajout des flèches pour les grands côtés si présents
     if(m1L !== "" && m1L !== undefined) {
         html += `<line x1="${Ax-45}" y1="${Ay}" x2="${Dx-45}" y2="${Dy}" class="dimension-line" />`;
     }
