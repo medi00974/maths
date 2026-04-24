@@ -22,7 +22,9 @@
         .mode-btn.btn-exam-mode.active { background: var(--purple); color: white; }
 
         #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
-        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; text-align: center; }
+        .input-info { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); font-size: 1rem; text-align: center; }
+        .input-nom { width: 250px; }
+        .input-classe { width: 100px; }
 
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
@@ -47,11 +49,8 @@
         .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 10px; }
         .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
 
-        #score-final { display: none; margin: 20px; padding: 20px; background: var(--primary); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; animation: fadeIn 0.5s; }
+        #score-final { display: none; margin: 20px; padding: 20px; background: var(--purple); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Styles SVG */
         .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
         .right-angle { fill: none; stroke: var(--danger); stroke-width: 2; }
         .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
@@ -77,8 +76,11 @@
     </div>
 
     <div id="nom-eleve-container">
-        <label><strong>Nom de l'élève :</strong></label><br><br>
-        <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
+        <label><strong>Identification :</strong></label><br><br>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <input type="text" id="nom-eleve" class="input-info input-nom" placeholder="Prénom NOM">
+            <input type="text" id="classe-eleve" class="input-info input-classe" placeholder="Classe (ex: 304)">
+        </div>
     </div>
 
     <div class="opt-container">
@@ -92,7 +94,7 @@
         </div>
         <span>Quantité :</span>
         <select id="exoQty">
-            <option value="1">1 (Mode Interactif)</option>
+            <option value="1">1 (Interactif)</option>
             <option value="4">4 exercices</option>
             <option value="6" selected>6 exercices</option>
         </select>
@@ -100,7 +102,7 @@
 
     <div class="controls">
         <button id="btn-generate" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
-        <button id="btn-toggle-sol" class="action btn-ans" onclick="toggleSolutions()">👁️ Voir/Cacher Corrigés</button>
+        <button id="btn-toggle-sol" class="action btn-ans" onclick="toggleSolutions()">👁️ Corrigés</button>
         <button id="btn-finish-exam" class="action btn-finish" onclick="finishExam()">✅ Terminer l'Examen</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
     </div>
@@ -111,7 +113,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypSKnsoNpKy-5S7Cjws_FkaKFOACEdHq1fLp4Z8OcUs70BQM0yQyuUaCb-49d46e-9/exec"; // COLLE TON LIEN ICI
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypSKnsoNpKy-5S7Cjws_FkaKFOACEdHq1fLp4Z8OcUs70BQM0yQyuUaCb-49d46e-9/exec"; 
 // ------------------------------------
 
 let currentMode = 'theoreme';
@@ -175,7 +177,7 @@ function generateSheet() {
             <div class="svg-wrap"><svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
             <div class="answer-zone">
-                <input type="text" class="user-input" id="input-${i}" placeholder="${type==='recip'?'oui/non':'Nombre'}">
+                <input type="text" class="user-input" id="input-${i}" placeholder="${type==='recip'?'oui/non':'Réponse'}">
                 ${!isExam ? `<button class="action" style="padding:5px 10px; background:var(--blue); color:white" onclick="checkAnswer(${i})">OK</button>` : ''}
                 <span id="fb-${i}" class="feedback"></span>
             </div>
@@ -196,46 +198,33 @@ function setupExo(id, type) {
 
     if (type === 'hypo') {
         let hyp = Math.sqrt(a*a + b*b).toFixed(1);
-        answersMap[id] = hyp;
+        answersMap[id] = { val: hyp, type: 'calcul' };
         document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <b>Calcule $${L[1]}${L[2]}$</b>.`;
-        document.getElementById('sol-'+id).innerHTML = `
-            Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de Pythagore :<br>
-            $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>
-            $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2$<br>
-            $${L[1]}${L[2]}^2 = ${a*a} + ${b*b} = ${a*a+b*b}$<br>
-            $${L[1]}${L[2]} = \\sqrt{${a*a+b*b}} \\approx$ <b>${hyp} cm</b>`;
+        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après Pythagore : $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$. Donc $${L[1]}${L[2]} \\approx$ <b>${hyp} cm</b>`;
         drawTriangle(svg, rot, a, b, "?", L);
     } else if (type === 'cote') {
         let hyp = Math.max(a, b) + 3;
         let coteM = Math.sqrt(hyp*hyp - a*a).toFixed(1);
-        answersMap[id] = coteM;
-        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. Hypotenuse $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <b>Calcule $${L[0]}${L[2]}$</b>.`;
-        document.getElementById('sol-'+id).innerHTML = `
-            Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après le théorème de Pythagore :<br>
-            $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$<br>
-            $${hyp}^2 = ${a}^2 + ${L[0]}${L[2]}^2$<br>
-            $${L[0]}${L[2]}^2 = ${hyp*hyp} - ${a*a} = ${hyp*hyp-a*a}$<br>
-            $${L[0]}${L[2]} = \\sqrt{${hyp*hyp-a*a}} \\approx$ <b>${coteM} cm</b>`;
+        answersMap[id] = { val: coteM, type: 'calcul' };
+        document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <b>Calcule $${L[0]}${L[2]}$</b>.`;
+        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après Pythagore : $${L[0]}${L[2]}^2 = ${hyp}^2 - ${a}^2 = ${hyp*hyp-a*a}$. Donc $${L[0]}${L[2]} \\approx$ <b>${coteM} cm</b>`;
         drawTriangle(svg, rot, a, "?", hyp, L);
     } else {
         const isRight = Math.random() > 0.5;
         let hyp = isRight ? Math.sqrt(a*a + b*b) : (Math.sqrt(a*a + b*b) + 1.2);
         hyp = parseFloat(hyp.toFixed(1));
-        answersMap[id] = isRight ? "oui" : "non";
-        document.getElementById('enonce-'+id).innerHTML = `On donne $${L[0]}${L[1]} = ${a}$ cm, $${L[0]}${L[2]} = ${b}$ cm et $${L[1]}${L[2]} = ${hyp}$ cm. <b>Le triangle est-il rectangle ?</b>`;
-        document.getElementById('sol-'+id).innerHTML = `
-            Côté le plus long : $${L[1]}${L[2]}^2 = ${hyp}^2 = ${(hyp*hyp).toFixed(2)}$<br>
-            Somme des carrés : $${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$<br>
-            ${isRight ? "L'égalité est vérifiée, il est <b>rectangle</b>." : "Pas d'égalité, il n'est <b>pas rectangle</b>."}`;
+        answersMap[id] = { val: isRight ? "oui" : "non", type: 'recip' };
+        document.getElementById('enonce-'+id).innerHTML = `$${L[0]}${L[1]} = ${a}$, $${L[0]}${L[2]} = ${b}$, $${L[1]}${L[2]} = ${hyp}$. <b>Est-il rectangle ?</b>`;
+        document.getElementById('sol-'+id).innerHTML = `$${hyp}^2 = ${(hyp*hyp).toFixed(1)}$ et $${a}^2 + ${b}^2 = ${a*a+b*b}$. ${isRight ? "C'est égal : <b>Rectangle</b>." : "Pas égal : <b>Non rectangle</b>."}`;
         drawTriangle(svg, rot, a, b, hyp, L, false);
     }
 }
 
 function checkAnswer(id, silent = false) {
     const val = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
-    const correct = answersMap[id];
+    const correct = answersMap[id].val;
     const fb = document.getElementById('fb-'+id);
-    let isCorrect = (correct === "oui" || correct === "non") ? (val === correct) : (Math.abs(parseFloat(val) - parseFloat(correct)) < 0.2);
+    let isCorrect = (answersMap[id].type === "recip") ? (val.includes(correct)) : (Math.abs(parseFloat(val) - parseFloat(correct)) < 0.21);
 
     if(!silent) {
         fb.textContent = isCorrect ? "✅" : "❌";
@@ -248,8 +237,8 @@ function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
     const classe = document.getElementById('classe-eleve').value;
     
-    if(isExam && (!nom || !classe)) { 
-        alert("Merci d'entrer ton Nom ET ta classe (ex: 304) avant de terminer."); 
+    if(!nom || !classe) { 
+        alert("Entrer Nom et Classe !"); 
         return; 
     }
 
@@ -257,36 +246,27 @@ function finishExam() {
     let details = "";
     const qty = 6;
     for(let i=0; i<qty; i++) {
-        const isCorrect = checkSingleAnswer(i, answersMap[i].type === 'reciproque' ? 'reciproque' : 'calcul');
-        if(isCorrect) {
-            correctCount++;
-        } else {
-            details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
-        }
+        if(checkAnswer(i, true)) correctCount++;
+        else details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
     }
-    const score = ((correctCount / qty) * 20).toFixed(1);
-    const resDiv = document.getElementById('exam-result');
-    resDiv.style.display = 'block';
-    resDiv.innerHTML = `🏁 Terminé ! Note : ${score} / 20 (${correctCount} / ${qty})`;
-    
-    toggleAllSolutions();
-    document.getElementById('btn-submit-exam').style.display = 'none';
 
-    if(isExam && WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbypSKnsoNpKy-5S7Cjws_FkaKFOACEdHq1fLp4Z8OcUs70BQM0yQyuUaCb-49d46e-9/exec") {
+    const score = ((correctCount / qty) * 20).toFixed(1);
+    const resDiv = document.getElementById('score-final');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `🏁 Note : ${score} / 20 (${correctCount} / ${qty})`;
+    
+    toggleSolutions();
+    document.getElementById('btn-finish-exam').style.display = 'none';
+
+    if(WEB_APP_URL.includes("google.com")) {
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({ 
-                nom: nom, 
-                classe: classe,
-                note: score, 
-                details: details || "Parfait" 
-            })
+            body: JSON.stringify({ nom: nom, classe: classe, note: score, details: details || "Parfait" })
         });
         alert("Résultats envoyés à M.Antoine ;) !");
     }
 }
-
 
 function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
     const xA=150, yA=200, xB=300, yB=200, xC=150, yC=80;
