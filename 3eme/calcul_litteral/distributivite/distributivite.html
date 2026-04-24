@@ -17,17 +17,22 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #f4f7f6; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #f4f7f6; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--light); padding: 20px; color: #333; }
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         h1 { text-align: center; color: var(--primary); margin-top: 0; }
         .menu { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; background: #f0f2f5; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #ddd; }
         .menu-item { display: flex; flex-direction: column; gap: 5px; font-weight: bold; }
-        select, input[type="number"] { padding: 8px; border-radius: 5px; border: 1px solid #ccc; background: white; }
+        select, input[type="number"], .input-info { padding: 8px; border-radius: 5px; border: 1px solid #ccc; background: white; }
         .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-gen { background: var(--accent); color: white; }
         .btn-print { background: var(--primary); color: white; }
         .btn-sol { background: var(--success); color: white; }
+        .btn-exam { background: var(--purple); color: white; }
+        
+        #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); text-align: center; }
+        #exam-result { display: none; font-size: 1.5rem; font-weight: bold; color: var(--purple); margin: 20px; padding: 15px; border: 3px solid var(--purple); border-radius: 10px; text-align: center; }
+
         .exo-grid { display: grid; gap: 20px; margin-top: 20px; }
         .cols-1 { grid-template-columns: 1fr; }
         .cols-2 { grid-template-columns: 1fr 1fr; }
@@ -37,9 +42,9 @@
         .input-zone { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
         .user-input { padding: 8px; width: 220px; border: 2px solid var(--accent); border-radius: 5px; font-size: 0.9rem; }
         .solution { display: none; margin-top: 15px; padding: 12px; background: #fafff0; border: 1px solid #d4e0b5; border-radius: 4px; }
-        .sol-flex { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 10px 0; }
+        
         @media print {
-            .menu, .input-zone, .btn { display: none !important; }
+            .menu, .input-zone, .btn, #nom-eleve-container { display: none !important; }
             body { background: white; padding: 0; }
             .container { box-shadow: none; border: none; max-width: 100%; width: 100%; padding: 0; }
             body.print-solutions .solution { display: block !important; }
@@ -49,7 +54,8 @@
 <body id="main-body">
 
 <div class="container">
-    <h1>Distributivité Combo (avec Tableaux)</h1>
+    <h1>Distributivité Combo</h1>
+
     <div class="menu">
         <div class="menu-item">
             <label>Type :</label>
@@ -61,7 +67,7 @@
         </div>
         <div class="menu-item">
             <label>Exercices :</label>
-            <input type="number" id="nbExo" value="3" min="1" max="10">
+            <input type="number" id="nbExo" value="4" min="1" max="10">
         </div>
         <div class="menu-item">
             <label>Colonnes :</label>
@@ -70,37 +76,40 @@
                 <option value="2" selected>2 Colonnes</option>
             </select>
         </div>
-        <div class="menu-item">
-            <label style="cursor: pointer;"><input type="checkbox" id="checkPrintSol" onchange="togglePrintClass()"> Imprimer la correction</label>
-        </div>
         <div style="align-self: flex-end; display: flex; gap: 8px;">
-            <button class="btn btn-gen" onclick="generate()">🔄 Générer</button>
-            <button class="btn btn-sol" onclick="toggleAllSolutions()">👁️ Voir Corrigés</button>
+            <button id="btn-gen-main" class="btn btn-gen" onclick="generate()">🔄 Générer</button>
+            <button id="btn-sol-main" class="btn btn-sol" onclick="toggleAllSolutions()">👁️ Corrigés</button>
+            <button id="btn-exam-main" class="btn btn-exam" onclick="startExam()">🎓 Mode Examen</button>
             <button class="btn btn-print" onclick="window.print()">🖨️ Imprimer</button>
+            <button id="btn-submit-exam" class="btn btn-exam" style="display:none;" onclick="finishExam()">✅ Terminer</button>
         </div>
     </div>
+
+    <div id="nom-eleve-container">
+        <input type="text" id="nom-eleve" class="input-info" placeholder="NOM Prénom" style="width:250px">
+        <input type="text" id="classe-eleve" class="input-info" placeholder="Classe (ex: 304)" style="width:100px">
+    </div>
+
+    <div id="exam-result"></div>
+
     <div id="exo-grid" class="exo-grid cols-2"></div>
 </div>
 
 <script>
+// --- CONFIGURATION GOOGLE SHEETS ---
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxgWllAdGxiwnOLWrnt5opnbH1TunjhHmHDJ5cnS5Hl80cdRZt2GjUKMyggFsbKEDt1yg/exec"; 
+// ------------------------------------
+
 let currentSolutions = [];
+let isExam = false;
 
-function togglePrintClass() {
-    document.getElementById('main-body').classList.toggle('print-solutions', document.getElementById('checkPrintSol').checked);
-}
-
-function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-
-function r(val) { return "\\color{red}{" + val + "}"; }
-
-function formatTerm(c, power, isFirst = false) {
-    if (c === 0) return "";
-    let res = c > 0 ? (isFirst ? "" : " + ") : (isFirst ? "-" : " - ");
-    let absC = Math.abs(c);
-    if (absC !== 1 || power === 0) res += absC;
-    if (power > 0) res += "x";
-    if (power > 1) res += "^2";
-    return res;
+function startExam() {
+    isExam = true;
+    document.getElementById('nom-eleve-container').style.display = 'block';
+    document.getElementById('btn-submit-exam').style.display = 'inline-block';
+    document.getElementById('btn-gen-main').style.display = 'none';
+    document.getElementById('nbExo').value = 6;
+    generate();
 }
 
 function generate() {
@@ -110,6 +119,7 @@ function generate() {
     grid.innerHTML = '';
     grid.className = "exo-grid cols-" + document.getElementById('nbCols').value;
     currentSolutions = [];
+    document.getElementById('exam-result').style.display = 'none';
 
     for (let i = 0; i < nb; i++) {
         let exo = (type === 'mix_combo') ? generateCombo() : (type === 'simple' ? generateSimple() : generateDouble());
@@ -122,16 +132,10 @@ function generate() {
             <div class="exo-expression">$E = ${exo.enonce}$</div>
             <div class="input-zone">
                 <input type="text" class="user-input" id="input-${i}" placeholder="Réponse réduite">
-                <button class="btn btn-gen" style="padding:5px 10px; font-size:0.8rem;" onclick="check(${i})">OK</button>
+                ${!isExam ? `<button class="btn btn-gen" style="padding:5px 10px; font-size:0.8rem;" onclick="check(${i})">OK</button>` : ''}
                 <span id="fb-${i}"></span>
             </div>
             <div id="sol-${i}" class="solution">
-                <strong>Méthode des tableaux :</strong>
-                <div class="sol-flex">
-                    <div>$$${exo.tab1 || ""} $$</div>
-                    <div>$$${exo.tab2 || ""} $$</div>
-                </div>
-                <strong>Réduction finale :</strong>
                 $E = ${exo.final}$
             </div>
         `;
@@ -140,13 +144,68 @@ function generate() {
     MathJax.typeset();
 }
 
+function check(id) {
+    let u = document.getElementById(`input-${id}`).value.replace(/\s/g, '').toLowerCase().replace('+', '');
+    let s = currentSolutions[id].replace(/\s/g, '').toLowerCase().replace('+', '');
+    let isCorrect = (u === s);
+    document.getElementById(`fb-${id}`).innerHTML = isCorrect ? " ✅" : " ❌";
+    return isCorrect;
+}
+
+function finishExam() {
+    const nom = document.getElementById('nom-eleve').value;
+    const classe = document.getElementById('classe-eleve').value;
+    const nb = currentSolutions.length;
+
+    if(!nom || !classe) {
+        alert("Inscris ton NOM et ta CLASSE !");
+        return;
+    }
+
+    let score = 0;
+    for(let i=0; i<nb; i++) {
+        if(check(i)) score++;
+    }
+
+    const noteFinale = ((score / nb) * 20).toFixed(1);
+    const resDiv = document.getElementById('exam-result');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `🏁 Terminé ! Note : ${noteFinale} / 20`;
+    
+    toggleAllSolutions();
+    document.getElementById('btn-submit-exam').style.display = 'none';
+
+    fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({
+            nom: nom,
+            classe: classe,
+            note: noteFinale,
+            details: "Distributivité Combo"
+        })
+    });
+    alert("Résultats envoyés à M.Antoine !");
+}
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function formatTerm(c, power, isFirst = false) {
+    if (c === 0) return "";
+    let res = c > 0 ? (isFirst ? "" : " + ") : (isFirst ? "-" : " - ");
+    let absC = Math.abs(c);
+    if (absC !== 1 || power === 0) res += absC;
+    if (power > 0) res += "x";
+    if (power > 1) res += "^2";
+    return res;
+}
+
 function generateSimple() {
     let k = rand(-5, 5); if(k===0) k=2;
     let a = rand(-5, 5); if(a===0) a=1;
     let b = rand(-9, 9);
-    let tab = `\\begin{array}{|c|c|c|} \\hline \\times & ${a}x & ${b} \\\\ \\hline ${k} & ${r(k*a+"x")} & ${r(k*b)} \\\\ \\hline \\end{array}`;
     let res = formatTerm(k*a, 1, true) + formatTerm(k*b, 0);
-    return { enonce: `${k}(${formatTerm(a, 1, true)}${formatTerm(b, 0)})`, tab1: tab, final: res };
+    return { enonce: `${k}(${formatTerm(a, 1, true)}${formatTerm(b, 0)})`, final: res };
 }
 
 function generateDouble() {
@@ -154,26 +213,19 @@ function generateDouble() {
     let b = rand(-5, 5);
     let c = rand(-4, 4); if(c===0) c=2;
     let d = rand(-5, 5);
-    let tab = `\\begin{array}{|c|c|c|} \\hline \\times & ${c}x & ${d} \\\\ \\hline ${a}x & ${r(a*c+"x^2")} & ${r(a*d+"x")} \\\\ \\hline ${b} & ${r(b*c+"x")} & ${r(b*d)} \\\\ \\hline \\end{array}`;
     let res = formatTerm(a*c, 2, true) + formatTerm(a*d+b*c, 1) + formatTerm(b*d, 0);
-    return { enonce: `(${formatTerm(a, 1, true)}${formatTerm(b, 0)})(${formatTerm(c, 1, true)}${formatTerm(d, 0)})`, tab1: tab, final: res };
+    return { enonce: `(${formatTerm(a, 1, true)}${formatTerm(b, 0)})(${formatTerm(c, 1, true)}${formatTerm(d, 0)})`, final: res };
 }
 
 function generateCombo() {
-    // Dist simple
     let k = rand(-4, 4); if(k===0) k=3;
     let sa = rand(-3, 3); if(sa===0) sa=1;
     let sb = rand(-6, 6);
-    let tabS = `\\begin{array}{|c|c|c|} \\hline \\text{Simple} & ${sa}x & ${sb} \\\\ \\hline ${k} & ${r(k*sa+"x")} & ${r(k*sb)} \\\\ \\hline \\end{array}`;
-
-    // Dist double
     let a = rand(-3, 3); if(a===0) a=1;
     let b = rand(-5, 5);
     let c = rand(-3, 3); if(c===0) c=2;
     let d = rand(-5, 5);
-    let tabD = `\\begin{array}{|c|c|c|} \\hline \\text{Double} & ${c}x & ${d} \\\\ \\hline ${a}x & ${r(a*c+"x^2")} & ${r(a*d+"x")} \\\\ \\hline ${b} & ${r(b*c+"x")} & ${r(b*d)} \\\\ \\hline \\end{array}`;
 
-    // Calcul final
     let fx2 = a*c;
     let fx1 = (k*sa) + (a*d + b*c);
     let fc = (k*sb) + (b*d);
@@ -181,16 +233,8 @@ function generateCombo() {
 
     return {
         enonce: `${k}(${formatTerm(sa, 1, true)}${formatTerm(sb, 0)}) + (${formatTerm(a, 1, true)}${formatTerm(b, 0)})(${formatTerm(c, 1, true)}${formatTerm(d, 0)})`,
-        tab1: tabS,
-        tab2: tabD,
         final: finalRes || "0"
     };
-}
-
-function check(id) {
-    let u = document.getElementById(`input-${id}`).value.replace(/\s/g, '').toLowerCase();
-    let s = currentSolutions[id].replace(/\s/g, '').toLowerCase();
-    document.getElementById(`fb-${id}`).innerHTML = (u === s || u === "+"+s) ? " ✅" : " ❌";
 }
 
 function toggleAllSolutions() {
