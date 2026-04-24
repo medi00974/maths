@@ -131,7 +131,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxETt4H1x8j2GF7rW3Yo82ZuFhbZwyme_fu9TNDlqrVYsfRWsT13FK_WgfTeNDQ26AzHA/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwyI2zn9tyN0w40M4yreZFgVJPnSfI0Dbs1SsqgzxXcTGbgQU_xiZkhpUvcgWt90ZarSQ/exec"; 
 // ------------------------------------
 
 let currentMode = 'emboite';
@@ -339,7 +339,7 @@ function finishExam() {
     toggleAllSolutions();
     document.getElementById('btn-submit-exam').style.display = 'none';
 
-    if(isExam && WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbxETt4H1x8j2GF7rW3Yo82ZuFhbZwyme_fu9TNDlqrVYsfRWsT13FK_WgfTeNDQ26AzHA/exec") {
+    if(isExam && WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbwyI2zn9tyN0w40M4yreZFgVJPnSfI0Dbs1SsqgzxXcTGbgQU_xiZkhpUvcgWt90ZarSQ/exec") {
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
