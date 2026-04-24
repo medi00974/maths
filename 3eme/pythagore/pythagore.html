@@ -111,7 +111,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx-NQxR8Vx6bMAzDty10VK6U2-oBQ58Awe5NxEOaDcbXBXaPBZJPgBu5PMRQ-2i59KZ/exec"; // COLLE TON LIEN ICI
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyB0Cnuj4BDbk5HiWzj2wDZgXKubjBGnCLa54k-DUYFztqOk-JWsWKGlfKpOgfhwl47/exec"; // COLLE TON LIEN ICI
 // ------------------------------------
 
 let currentMode = 'theoreme';
@@ -246,29 +246,47 @@ function checkAnswer(id, silent = false) {
 
 function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
-    if(isExam && !nom) { alert("Merci d'entrer ton nom avant de terminer."); return; }
-
-    let points = 0;
-    let details = "";
-    for(let i=0; i<6; i++) {
-        const ok = checkAnswer(i);
-        if(ok) points++; else details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
-        document.getElementById('sol-'+i).style.display = 'block';
+    const classe = document.getElementById('classe-eleve').value;
+    
+    if(isExam && (!nom || !classe)) { 
+        alert("Merci d'entrer ton Nom ET ta classe (ex: 304) avant de terminer."); 
+        return; 
     }
-    const note = ((points / 6) * 20).toFixed(1);
-    const scoreDiv = document.getElementById('score-final');
-    scoreDiv.style.display = 'block';
-    scoreDiv.innerHTML = `🏁 Terminé ! Note : ${note}/20 (${points}/6)`;
 
-    if(isExam && WEB_APP_URL !== "TON_URL_ICI") {
+    let correctCount = 0;
+    let details = "";
+    const qty = 6;
+    for(let i=0; i<qty; i++) {
+        const isCorrect = checkSingleAnswer(i, answersMap[i].type === 'reciproque' ? 'reciproque' : 'calcul');
+        if(isCorrect) {
+            correctCount++;
+        } else {
+            details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
+        }
+    }
+    const score = ((correctCount / qty) * 20).toFixed(1);
+    const resDiv = document.getElementById('exam-result');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `🏁 Terminé ! Note : ${score} / 20 (${correctCount} / ${qty})`;
+    
+    toggleAllSolutions();
+    document.getElementById('btn-submit-exam').style.display = 'none';
+
+    if(isExam && WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyB0Cnuj4BDbk5HiWzj2wDZgXKubjBGnCLa54k-DUYFztqOk-JWsWKGlfKpOgfhwl47/exec") {
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({ nom: nom, note: note, details: details || "Parfait" })
+            body: JSON.stringify({ 
+                nom: nom, 
+                classe: classe,
+                note: score, 
+                details: details || "Parfait" 
+            })
         });
         alert("Résultats envoyés à M.Antoine ;) !");
     }
 }
+
 
 function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
     const xA=150, yA=200, xB=300, yB=200, xC=150, yC=80;
