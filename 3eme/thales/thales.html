@@ -38,7 +38,6 @@
         .btn-gen { background: var(--accent); color: white; }
         .btn-ans { background: var(--success); color: white; }
         .btn-print { background: var(--primary); color: white; }
-        .btn-exam { background: #8e44ad; color: white; }
         
         .answer-zone { margin: 15px 0; padding: 15px; border-top: 2px dashed #ccc; }
         .user-input { padding: 10px; border: 2px solid var(--primary); border-radius: 5px; width: 120px; font-size: 1rem; text-align: center; }
@@ -172,38 +171,48 @@ function generateSheet() {
 
 function createExoLogic(id, mode) {
     const g = document.getElementById('group-' + id);
-    const rot = Math.floor(Math.random() * 360);
+    const rot = Math.floor(Math.random() * 30) - 15; // Rotation légère pour éviter que le texte sorte
     g.setAttribute("transform", `rotate(${rot}, 250, 200)`);
     const L = getLetters();
     if (mode === 'reciproque') setupReciproque(id, L, rot); else setupThales(id, L, rot, mode);
 }
 
 function setupThales(id, L, rot, mode) {
-    const k = (1.4 + Math.random() * 0.8).toFixed(1);
+    const k = (1.4 + Math.random() * 0.5).toFixed(1);
     const v1 = (3 + Math.random() * 3).toFixed(1);
     const v1L = (v1 * k).toFixed(1);
     const v2 = (3 + Math.random() * 3).toFixed(1);
     const v2L = (v2 * k).toFixed(1);
+    
     answersMap[id] = { val: v1, type: 'calcul' };
     document.getElementById('enonce-'+id).innerHTML = `(${L[1]}${L[2]}) // (${L[3]}${L[4]}). Calcule $${L[0]}${L[1]}$.`;
     document.getElementById('sol-'+id).innerHTML = `Réponse : **${v1}**`;
+    
     const g = document.getElementById('group-'+id);
-    mode === 'emboite' ? drawEmb(g, L, rot, "?", v1L, v2, v2L) : drawPap(g, L, rot, "?", v1L, v2, v2L);
+    if (mode === 'emboite') drawEmb(g, L, rot, "?", v1L, v2, v2L); 
+    else drawPap(g, L, rot, "?", v1L, v2, v2L);
 }
 
 function setupReciproque(id, L, rot) {
     const ok = Math.random() > 0.5;
+    const m1 = randVal();
+    const m1L = (m1 * 2).toFixed(1);
+    const m2 = randVal();
+    const m2L = (m2 * (ok ? 2 : 2.5)).toFixed(1);
+
     answersMap[id] = { val: ok ? "oui" : "non", type: 'reciproque' };
     document.getElementById('enonce-'+id).innerHTML = `Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont-elles parallèles ?`;
     document.getElementById('sol-'+id).innerHTML = `Réponse : **${ok?'Oui':'Non'}**`;
-    drawEmb(document.getElementById('group-'+id), L, rot, 3, 6, 4, ok ? 8 : 9);
+    drawEmb(document.getElementById('group-'+id), L, rot, m1, m1L, m2, m2L);
 }
+
+function randVal() { return (3 + Math.random() * 4).toFixed(1); }
 
 function checkSingleAnswer(id) {
     const userVal = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
     const correct = answersMap[id].val;
     const fb = document.getElementById('fb-'+id);
-    let isOk = (answersMap[id].type === 'reciproque') ? userVal.includes(correct) : (Math.abs(parseFloat(userVal) - parseFloat(correct)) < 0.15);
+    let isOk = (answersMap[id].type === 'reciproque') ? userVal.includes(correct) : (Math.abs(parseFloat(userVal) - parseFloat(correct)) < 0.2);
     if(fb) { fb.innerHTML = isOk ? "✅" : "❌"; fb.style.color = isOk ? "green" : "red"; }
     return isOk;
 }
@@ -212,47 +221,60 @@ function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
     const classe = document.getElementById('classe-eleve').value;
     if(!nom || !classe) { alert("Nom et Classe obligatoires !"); return; }
-
     let score = 0;
     for(let i=0; i<6; i++) if(checkSingleAnswer(i)) score++;
     const note = ((score/6)*20).toFixed(1);
-    
     document.getElementById('exam-result').style.display = "block";
     document.getElementById('exam-result').innerHTML = `🏁 Note : ${note}/20`;
     toggleAllSolutions();
     document.getElementById('btn-submit-exam').style.display = "none";
-
-    fetch(WEB_APP_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ nom: nom, classe: classe, note: note, details: "Thales Examen" })
-    });
-    alert("Résultats envoyés avec succès !");
+    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nom: nom, classe: classe, note: note, details: "Thales Examen" }) });
+    alert("Résultats envoyés !");
 }
 
 function drawEmb(g, L, rot, m1, m1L, m2, m2L) {
-    const Ax=250, Ay=80, Dx=150, Dy=350, Ex=350, Ey=350;
+    const Ax=250, Ay=50, Dx=120, Dy=350, Ex=380, Ey=350;
     const Bx=Ax+(Dx-Ax)*0.6, By=Ay+(Dy-Ay)*0.6, Cx=Ax+(Ex-Ax)*0.6, Cy=Ay+(Ey-Ay)*0.6;
+    
     g.innerHTML = `<path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/><line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
-    addTxt(g, rot, Ax, Ay, L[0], "label-point", 0, -20);
-    addTxt(g, rot, Bx, By, L[1], "label-point", -20, 0);
+    
+    addTxt(g, rot, Ax, Ay, L[0], "label-point", 0, -15);
+    addTxt(g, rot, Bx, By, L[1], "label-point", -20, 5);
     addTxt(g, rot, Dx, Dy, L[3], "label-point", -20, 20);
-    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -25, 0);
-    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", -55, 0);
+    addTxt(g, rot, Cx, Cy, L[2], "label-point", 20, 5);
+    addTxt(g, rot, Ex, Ey, L[4], "label-point", 20, 20);
+
+    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, 0);
+    addTxt(g, rot, (Ax+Dx)/2 + 20, (Ay+Dy)/2, m1L, "measure-text", -70, 0);
+    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 25, 0);
+    addTxt(g, rot, (Ax+Ex)/2 - 20, (Ay+Ey)/2, m2L, "measure-text", 40, 0);
 }
 
 function drawPap(g, L, rot, m1, m1L, m2, m2L) {
-    const Ax=250, Ay=200, Bx=170, By=120, Cx=330, Cy=120, Dx=350, Dy=300, Ex=150, Ey=300;
-    g.innerHTML = `<line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/><line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/><line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/><line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
-    addTxt(g, rot, Ax, Ay, L[0], "label-point", 20, 0);
+    const Ax=250, Ay=200, Bx=150, By=80, Cx=350, Cy=80, Dx=350, Dy=320, Ex=150, Ey=320;
+    
+    g.innerHTML = `<line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/>
+                   <line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/>
+                   <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>
+                   <line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
+    
+    addTxt(g, rot, Ax, Ay, L[0], "label-point", 20, 5);
     addTxt(g, rot, Bx, By, L[1], "label-point", -20, -10);
-    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -30, -10);
+    addTxt(g, rot, Cx, Cy, L[2], "label-point", 20, -10);
+    addTxt(g, rot, Dx, Dy, L[3], "label-point", 20, 25);
+    addTxt(g, rot, Ex, Ey, L[4], "label-point", -20, 25);
+
+    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, -5);
+    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", 25, 10);
+    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 25, -5);
+    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", -45, 10);
 }
 
 function addTxt(g, rot, x, y, val, cls, ox, oy) {
     const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
     t.setAttribute("x", x + ox); t.setAttribute("y", y + oy);
-    t.setAttribute("class", cls); t.setAttribute("transform", `rotate(${-rot}, ${x+ox}, ${y+oy})`);
+    t.setAttribute("class", cls); 
+    t.setAttribute("transform", `rotate(${-rot}, ${x+ox}, ${y+oy})`);
     t.textContent = val; g.appendChild(t);
 }
 
