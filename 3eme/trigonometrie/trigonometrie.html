@@ -11,12 +11,20 @@
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --orange: #e67e22; }
+        :root { --primary: #2c3e50; --accent: #3498db; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --orange: #e67e22; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
         .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .mode-btn { padding: 10px 20px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
+        .mode-btn.btn-exam-mode { border-color: var(--purple); color: var(--purple); }
+        .mode-btn.btn-exam-mode.active { background: var(--purple); color: white; }
+
+        #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
+        .input-info { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); font-size: 1rem; text-align: center; }
+        .input-nom { width: 250px; }
+        .input-classe { width: 100px; }
+
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
         .cols-1 { grid-template-columns: 1fr; }
@@ -24,20 +32,27 @@
         .exo-block { border: 1px solid #eee; padding: 20px; border-radius: 10px; page-break-inside: avoid; background: white; text-align: left; position: relative; }
         .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; }
         .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
-        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-gen { background: var(--accent); color: white; }
         .btn-ans { background: var(--success); color: white; }
         .btn-print { background: var(--primary); color: white; }
+        .btn-finish { background: var(--purple); color: white; display: none; }
+        
         .answer-zone { margin: 10px 0; padding: 10px; border-top: 1px dashed #ccc; display: flex; align-items: center; gap: 10px; }
         .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 80px; text-align: center; font-weight: bold; }
+        .feedback { font-weight: bold; margin-left: 10px; font-size: 1.2rem; }
+
         .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--accent); padding-left: 10px; }
         .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
+        #score-final { display: none; margin: 20px; padding: 20px; background: var(--purple); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; }
+
         .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
         .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
+
         @media print {
             body { background: white; padding: 0; }
             .card { box-shadow: none; border: none; max-width: 100%; }
-            .mode-selector, .opt-container, .controls, .answer-zone { display: none !important; }
+            .mode-selector, .opt-container, .controls, .answer-zone, #score-final, #nom-eleve-container { display: none !important; }
             body.print-with-solution .solution { display: block !important; }
             .exo-block { border: 1px solid #ccc; margin-bottom: 20px; }
         }
@@ -47,37 +62,66 @@
 
 <div class="card">
     <h1>📐 Générateur Trigonométrie</h1>
+    
     <div class="mode-selector">
-        <button class="mode-btn active" onclick="setMode('longueur', this)">Calculer Longueur</button>
-        <button class="mode-btn" onclick="setMode('angle', this)">Calculer Angle</button>
-        <button class="mode-btn" onclick="setMode('mixte', this)">Mode Mixte</button>
+        <button class="mode-btn active" onclick="setMode('longueur', this)">Longueur</button>
+        <button class="mode-btn" onclick="setMode('angle', this)">Angle</button>
+        <button class="mode-btn" onclick="setMode('mixte', this)">Mixte</button>
+        <button class="mode-btn btn-exam-mode" onclick="setMode('examen', this)">🎓 Examen</button>
     </div>
+
+    <div id="nom-eleve-container">
+        <label><strong>Identification :</strong></label><br><br>
+        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+            <input type="text" id="nom-eleve" class="input-info input-nom" placeholder="Prénom NOM">
+            <input type="text" id="classe-eleve" class="input-info input-classe" placeholder="Classe (ex: 304)">
+        </div>
+    </div>
+
     <div class="opt-container">
         <span>Quantité :</span>
         <select id="exoQty">
-            <option value="1">1 (Mode Interactif)</option>
+            <option value="1">1 (Interactif)</option>
             <option value="4">4 exercices</option>
-            <option value="6">6 exercices</option>
+            <option value="6" selected>6 exercices</option>
             <option value="8">8 exercices</option>
         </select>
         <label><input type="checkbox" id="printSolution" onchange="updatePrintMode()"> Imprimer Corrigé</label>
     </div>
+
     <div class="controls">
-        <button class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
-        <button class="action btn-ans" onclick="toggleSolutions()">👁️ Voir/Cacher Corrigés</button>
+        <button id="btn-generate" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
+        <button id="btn-toggle-sol" class="action btn-ans" onclick="toggleSolutions()">👁️ Corrigés</button>
+        <button id="btn-finish-exam" class="action btn-finish" onclick="finishExam()">✅ Terminer l'Examen</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
     </div>
+
+    <div id="score-final"></div>
     <div id="print-wrapper" class="print-cols cols-2"></div>
 </div>
 
 <script>
+// --- CONFIGURATION GOOGLE SHEETS ---
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxnGSvr1n4B5zmyHffPO4VAQnLHCI4fi5mZE1_FbXOiPOWwewSERp95B9UYwYGeJLm4Kg/exec"; 
+// ------------------------------------
+
 let currentMode = 'longueur';
 let answersMap = {};
+let isExam = false;
 
 function setMode(m, btn) {
-    currentMode = m;
+    isExam = (m === 'examen');
+    currentMode = isExam ? 'mixte' : m;
+    
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    
+    document.getElementById('nom-eleve-container').style.display = isExam ? 'block' : 'none';
+    document.getElementById('btn-finish-exam').style.display = isExam ? 'inline-block' : 'none';
+    document.getElementById('btn-generate').style.display = isExam ? 'none' : 'inline-block';
+    document.getElementById('btn-toggle-sol').style.display = isExam ? 'none' : 'inline-block';
+    
+    if(isExam) document.getElementById('exoQty').value = "6";
     generateSheet();
 }
 
@@ -93,8 +137,9 @@ function toggleSolutions() {
 }
 
 function generateSheet() {
-    const qty = parseInt(document.getElementById('exoQty').value);
+    const qty = isExam ? 6 : parseInt(document.getElementById('exoQty').value);
     const wrapper = document.getElementById('print-wrapper');
+    document.getElementById('score-final').style.display = 'none';
     wrapper.innerHTML = '';
     wrapper.className = (qty === 1) ? 'print-cols cols-1' : 'print-cols cols-2';
     answersMap = {};
@@ -104,12 +149,13 @@ function generateSheet() {
         exoDiv.className = 'exo-block';
         let effectiveType = currentMode;
         if(currentMode === 'mixte') effectiveType = Math.random() < 0.5 ? 'longueur' : 'angle';
+        
         exoDiv.innerHTML = `
             <div class="svg-wrap"><svg id="svg-${i}" width="280" height="220" viewBox="0 0 400 300"></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
             <div class="answer-zone">
                 <input type="text" class="user-input" id="input-${i}" placeholder="Réponse">
-                <button class="action" style="padding:5px 10px; background:var(--accent); color:white" onclick="checkAnswer(${i})">OK</button>
+                ${!isExam ? `<button class="action" style="padding:5px 10px; background:var(--accent); color:white" onclick="checkAnswer(${i})">OK</button>` : ''}
                 <span id="fb-${i}" class="feedback"></span>
             </div>
             <div id="sol-${i}" class="solution"></div>
@@ -137,37 +183,27 @@ function setupTrigoExo(id, type) {
     if (type === 'longueur') {
         if (config === 0) { 
             enonce += `On donne $${S1}${S3} = ${adjVal}$ cm et $${angleName} = ${angVal}^\\circ$. <br>Calcule $${S2}${S3}$.`;
-            sol += `$\\cos(${angleName}) = \\frac{${S1}${S3}}{${S2}${S3}} \\Rightarrow \\frac{\\cos(${angVal}^\\circ)}{1} = \\frac{${adjVal}}{${S2}${S3}}$<br>`;
-            sol += `Produit en croix : $${S2}${S3} \\times \\cos(${angVal}^\\circ) = ${adjVal} \\times 1$<br>`;
-            sol += `$${S2}${S3} = \\frac{${adjVal}}{\\cos(${angVal}^\\circ)} \\approx$ **${hypVal} cm**`;
+            sol += `$\\cos(${angleName}) = \\frac{${S1}${S3}}{${S2}${S3}} \\Rightarrow ${S2}${S3} = \\frac{${adjVal}}{\\cos(${angVal}^\\circ)} \\approx$ **${hypVal} cm**`;
             correctAns = hypVal;
         } else if (config === 1) { 
             enonce += `On donne $${S2}${S3} = ${hypVal}$ cm et $${angleName} = ${angVal}^\\circ$. <br>Calcule $${S1}${S2}$.`;
-            sol += `$\\sin(${angleName}) = \\frac{${S1}${S2}}{${S2}${S3}} \\Rightarrow \\frac{\\sin(${angVal}^\\circ)}{1} = \\frac{${S1}${S2}}{${hypVal}}$<br>`;
-            sol += `Produit en croix : $${S1}${S2} \\times 1 = ${hypVal} \\times \\sin(${angVal}^\\circ)$<br>`;
-            sol += `$${S1}${S2} \\approx$ **${oppVal} cm**`;
+            sol += `$\\sin(${angleName}) = \\frac{${S1}${S2}}{${S2}${S3}} \\Rightarrow ${S1}${S2} = ${hypVal} \\times \\sin(${angVal}^\\circ) \\approx$ **${oppVal} cm**`;
             correctAns = oppVal;
         } else { 
             enonce += `On donne $${S1}${S3} = ${adjVal}$ cm et $${angleName} = ${angVal}^\\circ$. <br>Calcule $${S1}${S2}$.`;
-            sol += `$\\tan(${angleName}) = \\frac{${S1}${S2}}{${S1}${S3}} \\Rightarrow \\frac{\\tan(${angVal}^\\circ)}{1} = \\frac{${S1}${S2}}{${adjVal}}$<br>`;
-            sol += `Produit en croix : $${S1}${S2} \\times 1 = ${adjVal} \\times \\tan(${angVal}^\\circ)$<br>`;
-            sol += `$${S1}${S2} \\approx$ **${oppVal} cm**`;
+            sol += `$\\tan(${angleName}) = \\frac{${S1}${S2}}{${S1}${S3}} \\Rightarrow ${S1}${S2} = ${adjVal} \\times \\tan(${angVal}^\\circ) \\approx$ **${oppVal} cm**`;
             correctAns = oppVal;
         }
     } else { 
-        let fName = config === 0 ? "cos" : (config === 1 ? "sin" : "tan");
         let nom1 = config === 1 ? S1+S2 : S1+S3; 
         let nom2 = config === 2 ? S1+S2 : S2+S3;
         let v1 = config === 1 ? oppVal : adjVal;
         let v2 = config === 2 ? oppVal : hypVal;
         let mathF = config === 0 ? "\\cos" : (config === 1 ? "\\sin" : "\\tan");
-        let invF = config === 0 ? "\\arccos" : (config === 1 ? "\\arcsin" : "\\arctan");
+        let invF = config === 0 ? "arccos" : (config === 1 ? "arcsin" : "arctan");
 
         enonce += `On donne $${nom1} = ${v1}$ cm et $${nom2} = ${v2}$ cm. <br>Calcule $${angleName}$ au degré près.`;
-        sol += `$${mathF}(${angleName}) = \\frac{${nom1}}{${nom2}} \\Rightarrow ${mathF}(${angleName}) = \\frac{${v1}}{${v2}}$<br>`;
-        sol += `Produit en croix (pour isoler l'angle) : $${mathF}(${angleName}) \\times ${v2} = ${v1} \\times 1$<br>`;
-        sol += `$${mathF}(${angleName}) = \\frac{${v1}}{${v2}}$<br>`;
-        sol += `$${angleName} = ${invF}(\\frac{${v1}}{${v2}}) \\approx$ **${angVal}^\\circ**`;
+        sol += `$${mathF}(${angleName}) = \\frac{${v1}}{${v2}} \\Rightarrow ${angleName} = ${invF}(\\frac{${v1}}{${v2}}) \\approx$ **${angVal}^\\circ**`;
         correctAns = angVal;
     }
 
@@ -175,6 +211,50 @@ function setupTrigoExo(id, type) {
     document.getElementById('enonce-'+id).innerHTML = enonce;
     document.getElementById('sol-'+id).innerHTML = sol;
     drawTriangle(document.getElementById('svg-'+id), rot, S1, S2, S3);
+}
+
+function checkAnswer(id, silent = false) {
+    const val = document.getElementById('input-'+id).value.trim().replace(',', '.');
+    const correct = answersMap[id];
+    const fb = document.getElementById('fb-'+id);
+    const isCorrect = Math.abs(parseFloat(val) - parseFloat(correct)) <= 0.21;
+
+    if(!silent && fb) {
+        fb.innerHTML = isCorrect ? "✅" : "❌";
+        fb.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+    }
+    return isCorrect;
+}
+
+function finishExam() {
+    const nom = document.getElementById('nom-eleve').value;
+    const classe = document.getElementById('classe-eleve').value;
+    if(!nom || !classe) { alert("Entrer Nom et Classe !"); return; }
+
+    let correctCount = 0;
+    let details = "";
+    const qty = 6;
+    for(let i=0; i<qty; i++) {
+        if(checkAnswer(i, true)) correctCount++;
+        else details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
+    }
+
+    const score = ((correctCount / qty) * 20).toFixed(1);
+    const resDiv = document.getElementById('score-final');
+    resDiv.style.display = 'block';
+    resDiv.innerHTML = `🏁 Note : ${score} / 20 (${correctCount} / ${qty})`;
+    
+    toggleSolutions();
+    document.getElementById('btn-finish-exam').style.display = 'none';
+
+    if(WEB_APP_URL.includes("google.com")) {
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ nom: nom, classe: classe, note: score, details: details || "Parfait" })
+        });
+        alert("Résultats envoyés à M.Antoine ;) !");
+    }
 }
 
 function drawTriangle(svg, rot, S1, S2, S3) {
@@ -191,16 +271,6 @@ function drawTriangle(svg, rot, S1, S2, S3) {
     svg.innerHTML = ''; svg.appendChild(group);
 }
 
-function checkAnswer(id) {
-    const val = document.getElementById('input-'+id).value.trim().replace(',', '.');
-    const correct = answersMap[id];
-    const fb = document.getElementById('fb-'+id);
-    if(Math.abs(parseFloat(val) - parseFloat(correct)) <= 0.2) {
-        fb.innerHTML = "✅ Correct !"; fb.style.color = "var(--success)";
-    } else {
-        fb.innerHTML = "❌ Faux (attendu : " + correct + ")"; fb.style.color = "var(--danger)";
-    }
-}
 generateSheet();
 </script>
 </body>
