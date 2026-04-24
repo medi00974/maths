@@ -19,9 +19,7 @@
         .mode-btn.active { background: var(--primary); color: white; }
         
         #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
-        .input-info { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); font-size: 1rem; text-align: center; }
-        .input-nom { width: 250px; }
-        .input-classe { width: 100px; }
+        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; text-align: center; }
 
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 10px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
@@ -46,6 +44,9 @@
         .enonce { font-size: 1.1rem; line-height: 1.6; margin: 15px 0; text-align: left; border-left: 5px solid var(--primary); padding-left: 15px; }
         .solution { display: none; margin-top: 15px; padding: 20px; background: #f0fff4; border-radius: 10px; text-align: left; border: 1px solid var(--success); line-height: 1.8; }
 
+        .tri-small { fill: rgba(52, 152, 219, 0.2); visibility: hidden; }
+        .tri-big { fill: rgba(39, 174, 96, 0.1); visibility: hidden; }
+        .show-colors .tri-small, .show-colors .tri-big { visibility: visible; }
         .shape-line { stroke: var(--primary); stroke-width: 2.5; fill: none; }
         .parallel-line { stroke: #e74c3c; stroke-width: 3; }
         .label-point { font-weight: bold; font-size: 20px; fill: var(--primary); font-family: serif; }
@@ -54,7 +55,8 @@
         #exam-result { display: none; font-size: 1.5rem; font-weight: bold; color: #8e44ad; margin: 20px; padding: 15px; border: 3px solid #8e44ad; border-radius: 10px; }
 
         @media print {
-            .mode-selector, .opt-container, .controls, .answer-zone, #nom-eleve-container, #exam-result { display: none !important; }
+            body { background: white; padding: 0; }
+            .mode-selector, .opt-container, .controls, .answer-zone, #nom-eleve-container { display: none !important; }
             body.print-with-solution .solution { display: block !important; }
         }
     </style>
@@ -62,8 +64,6 @@
 <body>
 
 <div class="card">
-    <h1>📐 Générateur Thalès</h1>
-
     <div class="mode-selector">
         <button class="mode-btn active" onclick="setMode('emboite', this)">Emboîté</button>
         <button class="mode-btn" onclick="setMode('papillon', this)">Papillon</button>
@@ -72,11 +72,8 @@
     </div>
 
     <div id="nom-eleve-container">
-        <label><strong>Identification de l'élève :</strong></label><br><br>
-        <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-            <input type="text" id="nom-eleve" class="input-info input-nom" placeholder="NOM Prénom">
-            <input type="text" id="classe-eleve" class="input-info input-classe" placeholder="Classe (ex: 304)">
-        </div>
+        <label><strong>Nom de l'élève :</strong></label><br>
+        <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
     </div>
 
     <div id="exam-result"></div>
@@ -96,18 +93,16 @@
 
     <div class="controls">
         <button id="btn-gen-main" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
-        <button id="btn-ans-main" class="action btn-ans" onclick="toggleAllSolutions()">👁️ Corrigés</button>
+        <button id="btn-ans-main" class="action btn-ans" onclick="toggleAllSolutions()">👁️ Voir Corrigés</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
-        <button id="btn-submit-exam" class="action" style="display:none; background:#8e44ad; color:white" onclick="finishExam()">✅ Terminer l'Examen</button>
+        <button id="btn-submit-exam" class="action btn-ans" style="display:none; background:#8e44ad" onclick="finishExam()">Terminer l'examen</button>
     </div>
 
     <div id="print-wrapper" class="print-cols cols-2"></div>
 </div>
 
 <script>
-// --- CONFIGURATION ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx8MYx1O5iyPdmOcLI7BNeQSPI7TLd5gECHtFiqMsgPhN0N97NWEhzqdEfl4kpups9Sjw/exec"; 
-// ----------------------
+const WEB_APP_URL = "TON_URL_ICI"; 
 
 let currentMode = 'emboite';
 let answersMap = {}; 
@@ -148,12 +143,12 @@ function generateSheet() {
     const qty = isExam ? 6 : parseInt(document.getElementById('exoQty').value);
     const wrapper = document.getElementById('print-wrapper');
     wrapper.innerHTML = ''; answersMap = {};
-    document.getElementById('exam-result').style.display = 'none';
 
     for (let i = 0; i < qty; i++) {
         const exoDiv = document.createElement('div');
         exoDiv.className = 'exo-block';
         let subMode = isExam ? ((i % 2 === 0) ? 'emboite' : 'reciproque') : currentMode;
+        
         exoDiv.innerHTML = `
             <div class="svg-wrap"><svg id="svg-${i}" width="400" height="320" viewBox="0 0 500 400"><g id="group-${i}"></g></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
@@ -170,111 +165,99 @@ function generateSheet() {
 }
 
 function createExoLogic(id, mode) {
-    const g = document.getElementById('group-' + id);
-    const rot = Math.floor(Math.random() * 30) - 15; // Rotation légère pour éviter que le texte sorte
-    g.setAttribute("transform", `rotate(${rot}, 250, 200)`);
+    const group = document.getElementById('group-' + id);
+    const rot = Math.floor(Math.random() * 20) - 10;
+    group.setAttribute("transform", `rotate(${rot}, 250, 200)`);
+    if(document.getElementById('checkColor').checked) group.parentElement.classList.add('show-colors');
     const L = getLetters();
     if (mode === 'reciproque') setupReciproque(id, L, rot); else setupThales(id, L, rot, mode);
 }
 
 function setupThales(id, L, rot, mode) {
-    const k = (1.4 + Math.random() * 0.5).toFixed(1);
-    const v1 = (3 + Math.random() * 3).toFixed(1);
+    const k = (1.5 + Math.random() * 0.5).toFixed(1);
+    const v1 = (3 + Math.random() * 2).toFixed(1);
     const v1L = (v1 * k).toFixed(1);
-    const v2 = (3 + Math.random() * 3).toFixed(1);
+    const v2 = (3 + Math.random() * 2).toFixed(1);
     const v2L = (v2 * k).toFixed(1);
-    
+    const bS = (4 + Math.random() * 2).toFixed(1);
+    const bL = (bS * k).toFixed(1);
+
     answersMap[id] = { val: v1, type: 'calcul' };
     document.getElementById('enonce-'+id).innerHTML = `(${L[1]}${L[2]}) // (${L[3]}${L[4]}). Calcule $${L[0]}${L[1]}$.`;
-    document.getElementById('sol-'+id).innerHTML = `Réponse : **${v1}**`;
     
+    document.getElementById('sol-'+id).innerHTML = `<b>Corrigé :</b> D'après Thalès, $${L[0]}${L[1]} = ${v1}$.`;
+
     const g = document.getElementById('group-'+id);
-    if (mode === 'emboite') drawEmb(g, L, rot, "?", v1L, v2, v2L); 
-    else drawPap(g, L, rot, "?", v1L, v2, v2L);
+    if(mode === 'emboite') drawEmb(g, L, rot, "?", v1L, v2, v2L, bS, bL);
+    else drawPap(g, L, rot, "?", v1L, v2, v2L, bS, bL);
 }
 
 function setupReciproque(id, L, rot) {
     const ok = Math.random() > 0.5;
-    const m1 = randVal();
-    const m1L = (m1 * 2).toFixed(1);
-    const m2 = randVal();
-    const m2L = (m2 * (ok ? 2 : 2.5)).toFixed(1);
-
+    const v1 = 4, v1L = 8, v2 = 5, v2L = ok ? 10 : 12;
     answersMap[id] = { val: ok ? "oui" : "non", type: 'reciproque' };
     document.getElementById('enonce-'+id).innerHTML = `Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont-elles parallèles ?`;
-    document.getElementById('sol-'+id).innerHTML = `Réponse : **${ok?'Oui':'Non'}**`;
-    drawEmb(document.getElementById('group-'+id), L, rot, m1, m1L, m2, m2L);
+    document.getElementById('sol-'+id).innerHTML = `<b>Corrigé :</b> ${ok ? "Oui (Rapports égaux)" : "Non (Rapports différents)"}`;
+    drawEmb(document.getElementById('group-'+id), L, rot, v1, v1L, v2, v2L, "", "");
 }
 
-function randVal() { return (3 + Math.random() * 4).toFixed(1); }
-
 function checkSingleAnswer(id) {
-    const userVal = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
-    const correct = answersMap[id].val;
-    const fb = document.getElementById('fb-'+id);
-    let isOk = (answersMap[id].type === 'reciproque') ? userVal.includes(correct) : (Math.abs(parseFloat(userVal) - parseFloat(correct)) < 0.2);
-    if(fb) { fb.innerHTML = isOk ? "✅" : "❌"; fb.style.color = isOk ? "green" : "red"; }
+    const val = document.getElementById('input-'+id).value.toLowerCase().trim();
+    const isOk = val.includes(answersMap[id].val);
+    document.getElementById('fb-'+id).innerHTML = isOk ? "✅" : "❌";
     return isOk;
 }
 
-function finishExam() {
-    const nom = document.getElementById('nom-eleve').value;
-    const classe = document.getElementById('classe-eleve').value;
-    if(!nom || !classe) { alert("Nom et Classe obligatoires !"); return; }
-    let score = 0;
-    for(let i=0; i<6; i++) if(checkSingleAnswer(i)) score++;
-    const note = ((score/6)*20).toFixed(1);
-    document.getElementById('exam-result').style.display = "block";
-    document.getElementById('exam-result').innerHTML = `🏁 Note : ${note}/20`;
-    toggleAllSolutions();
-    document.getElementById('btn-submit-exam').style.display = "none";
-    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ nom: nom, classe: classe, note: note, details: "Thales Examen" }) });
-    alert("Résultats envoyés !");
-}
-
-function drawEmb(g, L, rot, m1, m1L, m2, m2L) {
-    const Ax=250, Ay=50, Dx=120, Dy=350, Ex=380, Ey=350;
+function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
+    const Ax=250, Ay=80, Dx=150, Dy=350, Ex=350, Ey=350;
     const Bx=Ax+(Dx-Ax)*0.6, By=Ay+(Dy-Ay)*0.6, Cx=Ax+(Ex-Ax)*0.6, Cy=Ay+(Ey-Ay)*0.6;
     
-    g.innerHTML = `<path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/><line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
+    g.innerHTML = `
+        <polygon points="${Ax},${Ay} ${Dx},${Dy} ${Ex},${Ey}" class="tri-big"/>
+        <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
+        <path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/>
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
     
-    addTxt(g, rot, Ax, Ay, L[0], "label-point", 0, -15);
-    addTxt(g, rot, Bx, By, L[1], "label-point", -20, 5);
-    addTxt(g, rot, Dx, Dy, L[3], "label-point", -20, 20);
-    addTxt(g, rot, Cx, Cy, L[2], "label-point", 20, 5);
-    addTxt(g, rot, Ex, Ey, L[4], "label-point", 20, 20);
-
+    addTxt(g, rot, Ax, Ay, L[0], "label-point", 0, -25);
+    addTxt(g, rot, Bx, By, L[1], "label-point", -25, 0); 
+    addTxt(g, rot, Cx, Cy, L[2], "label-point", 25, 0);
+    addTxt(g, rot, Dx, Dy, L[3], "label-point", -25, 25); 
+    addTxt(g, rot, Ex, Ey, L[4], "label-point", 25, 25);
+    
     addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, 0);
-    addTxt(g, rot, (Ax+Dx)/2 + 20, (Ay+Dy)/2, m1L, "measure-text", -70, 0);
-    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 25, 0);
-    addTxt(g, rot, (Ax+Ex)/2 - 20, (Ay+Ey)/2, m2L, "measure-text", 40, 0);
+    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", -70, 0); 
+    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 35, 0);
+    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", 70, 0);
 }
 
-function drawPap(g, L, rot, m1, m1L, m2, m2L) {
-    const Ax=250, Ay=200, Bx=150, By=80, Cx=350, Cy=80, Dx=350, Dy=320, Ex=150, Ey=320;
-    
-    g.innerHTML = `<line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/>
-                   <line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/>
-                   <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>
-                   <line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
-    
-    addTxt(g, rot, Ax, Ay, L[0], "label-point", 20, 5);
-    addTxt(g, rot, Bx, By, L[1], "label-point", -20, -10);
-    addTxt(g, rot, Cx, Cy, L[2], "label-point", 20, -10);
-    addTxt(g, rot, Dx, Dy, L[3], "label-point", 20, 25);
-    addTxt(g, rot, Ex, Ey, L[4], "label-point", -20, 25);
+function drawPap(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
+    const Ax=250, Ay=200, Bx=170, By=120, Cx=330, Cy=120, Dx=350, Dy=300, Ex=150, Ey=300;
+    g.innerHTML = `
+        <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
+        <polygon points="${Ax},${Ay} ${Dx},${Dy} ${Ex},${Ey}" class="tri-big"/>
+        <line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/>
+        <line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/>
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>
+        <line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
 
-    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, -5);
-    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", 25, 10);
-    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 25, -5);
-    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", -45, 10);
+    addTxt(g, rot, Ax, Ay, L[0], "label-point", 25, 0);
+    addTxt(g, rot, Bx, By, L[1], "label-point", -20, -20);
+    addTxt(g, rot, Cx, Cy, L[2], "label-point", 20, -20);
+    addTxt(g, rot, Dx, Dy, L[3], "label-point", 20, 20);
+    addTxt(g, rot, Ex, Ey, L[4], "label-point", -20, 20);
+
+    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, -10);
+    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", 40, 10);
+    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 35, -10);
+    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", -40, 10);
 }
 
 function addTxt(g, rot, x, y, val, cls, ox, oy) {
+    if(!val) return;
     const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
     t.setAttribute("x", x + ox); t.setAttribute("y", y + oy);
-    t.setAttribute("class", cls); 
-    t.setAttribute("transform", `rotate(${-rot}, ${x+ox}, ${y+oy})`);
+    t.setAttribute("class", cls); t.setAttribute("text-anchor", "middle");
+    t.setAttribute("transform", `rotate(${-rot}, ${x + ox}, ${y + oy})`);
     t.textContent = val; g.appendChild(t);
 }
 
