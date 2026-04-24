@@ -14,48 +14,37 @@
         :root { --primary: #2c3e50; --accent: #e67e22; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --blue: #3498db; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
-        
         .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
         .mode-btn { padding: 10px 20px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
         .mode-btn.btn-exam-mode { border-color: var(--purple); color: var(--purple); }
         .mode-btn.btn-exam-mode.active { background: var(--purple); color: white; }
-
         #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
         .input-info { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); font-size: 1rem; text-align: center; }
         .input-nom { width: 250px; }
         .input-classe { width: 100px; }
-
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 15px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
-        
         .print-cols { display: grid; gap: 30px; width: 100%; margin-top: 20px; }
         .cols-1 { grid-template-columns: 1fr; }
         .cols-2 { grid-template-columns: 1fr 1fr; }
-
         .exo-block { border: 1px solid #eee; padding: 20px; border-radius: 10px; page-break-inside: avoid; background: white; text-align: left; }
         .svg-wrap { width: 100%; display: flex; justify-content: center; margin-bottom: 10px; background: #fff; }
-        
         .controls { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; flex-wrap: wrap; }
         button.action { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-gen { background: var(--blue); color: white; }
         .btn-ans { background: var(--success); color: white; }
         .btn-print { background: var(--primary); color: white; }
         .btn-finish { background: var(--purple); color: white; display: none; }
-        
         .answer-zone { margin: 10px 0; padding: 10px; border-top: 1px dashed #ccc; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 100px; text-align: center; font-weight: bold; }
         .feedback { font-weight: bold; margin-left: 10px; font-size: 1.2rem; }
-
         .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 10px; }
         .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
-
         #score-final { display: none; margin: 20px; padding: 20px; background: var(--purple); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; }
-
         .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
         .right-angle { fill: none; stroke: var(--danger); stroke-width: 2; }
         .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
         .measure-text { fill: #d35400; font-size: 16px; font-weight: bold; }
-
         @media print {
             body { background: white; padding: 0; }
             .mode-selector, .opt-container, .controls, .answer-zone, #score-final, #nom-eleve-container { display: none !important; }
@@ -113,7 +102,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypSKnsoNpKy-5S7Cjws_FkaKFOACEdHq1fLp4Z8OcUs70BQM0yQyuUaCb-49d46e-9/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwIAi4IwkKQ-LVRfV1Rp2wtaK3KV2qoMilI4bAGOYkOyQiVJ8SXQM8zI0W_lagyjeQ9/exec"; 
 // ------------------------------------
 
 let currentMode = 'theoreme';
@@ -123,16 +112,13 @@ let isExam = false;
 function setMode(m, btn) {
     isExam = (m === 'examen');
     currentMode = isExam ? 'mixte' : m;
-    
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
     document.getElementById('nom-eleve-container').style.display = isExam ? 'block' : 'none';
     document.getElementById('theoreme-sub-opts').style.display = (m === 'reciproque' || isExam) ? 'none' : 'block';
     document.getElementById('btn-finish-exam').style.display = isExam ? 'inline-block' : 'none';
     document.getElementById('btn-generate').style.display = isExam ? 'none' : 'inline-block';
     document.getElementById('btn-toggle-sol').style.display = isExam ? 'none' : 'inline-block';
-    
     if(isExam) document.getElementById('exoQty').value = "6";
     generateSheet();
 }
@@ -155,11 +141,9 @@ function generateSheet() {
     wrapper.innerHTML = '';
     wrapper.className = (qty === 1) ? 'print-cols cols-1' : 'print-cols cols-2';
     answersMap = {};
-
     for (let i = 0; i < qty; i++) {
         const exoDiv = document.createElement('div');
         exoDiv.className = 'exo-block';
-        
         let type;
         if (isExam) {
             if(i < 2) type = 'hypo'; else if(i < 4) type = 'cote'; else type = 'recip';
@@ -172,7 +156,6 @@ function generateSheet() {
             const choice = Math.random();
             type = (choice < 0.33) ? 'hypo' : (choice < 0.66 ? 'cote' : 'recip');
         }
-
         exoDiv.innerHTML = `
             <div class="svg-wrap"><svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
@@ -195,19 +178,18 @@ function setupExo(id, type) {
     const svg = document.getElementById('svg-'+id);
     let a = Math.floor(Math.random() * 5) + 3; 
     let b = Math.floor(Math.random() * 5) + 3;
-
     if (type === 'hypo') {
         let hyp = Math.sqrt(a*a + b*b).toFixed(1);
         answersMap[id] = { val: hyp, type: 'calcul' };
         document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <b>Calcule $${L[1]}${L[2]}$</b>.`;
-        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après Pythagore : $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$. Donc $${L[1]}${L[2]} \\approx$ <b>${hyp} cm</b>`;
+        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$. Donc $${L[1]}${L[2]} \\approx$ <b>${hyp} cm</b>`;
         drawTriangle(svg, rot, a, b, "?", L);
     } else if (type === 'cote') {
         let hyp = Math.max(a, b) + 3;
         let coteM = Math.sqrt(hyp*hyp - a*a).toFixed(1);
         answersMap[id] = { val: coteM, type: 'calcul' };
         document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <b>Calcule $${L[0]}${L[2]}$</b>.`;
-        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, d'après Pythagore : $${L[0]}${L[2]}^2 = ${hyp}^2 - ${a}^2 = ${hyp*hyp-a*a}$. Donc $${L[0]}${L[2]} \\approx$ <b>${coteM} cm</b>`;
+        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, $${L[0]}${L[2]}^2 = ${hyp}^2 - ${a}^2 = ${hyp*hyp-a*a}$. Donc $${L[0]}${L[2]} \\approx$ <b>${coteM} cm</b>`;
         drawTriangle(svg, rot, a, "?", hyp, L);
     } else {
         const isRight = Math.random() > 0.5;
@@ -215,18 +197,19 @@ function setupExo(id, type) {
         hyp = parseFloat(hyp.toFixed(1));
         answersMap[id] = { val: isRight ? "oui" : "non", type: 'recip' };
         document.getElementById('enonce-'+id).innerHTML = `$${L[0]}${L[1]} = ${a}$, $${L[0]}${L[2]} = ${b}$, $${L[1]}${L[2]} = ${hyp}$. <b>Est-il rectangle ?</b>`;
-        document.getElementById('sol-'+id).innerHTML = `$${hyp}^2 = ${(hyp*hyp).toFixed(1)}$ et $${a}^2 + ${b}^2 = ${a*a+b*b}$. ${isRight ? "C'est égal : <b>Rectangle</b>." : "Pas égal : <b>Non rectangle</b>."}`;
+        document.getElementById('sol-'+id).innerHTML = `$${hyp}^2 = ${(hyp*hyp).toFixed(1)}$ et $${a}^2 + ${b}^2 = ${a*a+b*b}$. ${isRight ? "Égal : <b>Rectangle</b>." : "Pas égal : <b>Non</b>."}`;
         drawTriangle(svg, rot, a, b, hyp, L, false);
     }
 }
 
 function checkAnswer(id, silent = false) {
-    const val = document.getElementById('input-'+id).value.toLowerCase().trim().replace(',', '.');
+    const inputField = document.getElementById('input-'+id);
+    if(!inputField) return false;
+    const val = inputField.value.toLowerCase().trim().replace(',', '.');
     const correct = answersMap[id].val;
     const fb = document.getElementById('fb-'+id);
     let isCorrect = (answersMap[id].type === "recip") ? (val.includes(correct)) : (Math.abs(parseFloat(val) - parseFloat(correct)) < 0.21);
-
-    if(!silent) {
+    if(!silent && fb) {
         fb.textContent = isCorrect ? "✅" : "❌";
         fb.style.color = isCorrect ? "var(--success)" : "var(--danger)";
     }
@@ -236,35 +219,33 @@ function checkAnswer(id, silent = false) {
 function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
     const classe = document.getElementById('classe-eleve').value;
-    
-    if(!nom || !classe) { 
-        alert("Entrer Nom et Classe !"); 
-        return; 
-    }
-
+    if(!nom || !classe) { alert("Entrer Nom et Classe !"); return; }
     let correctCount = 0;
     let details = "";
-    const qty = 6;
-    for(let i=0; i<qty; i++) {
+    for(let i=0; i<6; i++) {
         if(checkAnswer(i, true)) correctCount++;
         else details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
     }
-
-    const score = ((correctCount / qty) * 20).toFixed(1);
+    const score = ((correctCount / 6) * 20).toFixed(1);
     const resDiv = document.getElementById('score-final');
     resDiv.style.display = 'block';
-    resDiv.innerHTML = `🏁 Note : ${score} / 20 (${correctCount} / ${qty})`;
-    
+    resDiv.innerHTML = `🏁 Note : ${score} / 20`;
     toggleSolutions();
     document.getElementById('btn-finish-exam').style.display = 'none';
 
+    // ENVOI SÉCURISÉ
     if(WEB_APP_URL.includes("google.com")) {
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
+            cache: 'no-cache',
+            headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ nom: nom, classe: classe, note: score, details: details || "Parfait" })
+        }).then(() => {
+            alert("Résultats envoyés à M.Antoine ;) !");
+        }).catch(err => {
+            alert("Erreur d'envoi. Vérifie ton URL.");
         });
-        alert("Résultats envoyés à M.Antoine ;) !");
     }
 }
 
@@ -283,7 +264,6 @@ function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
         <text x="${(xB+xC)/2+15}" y="${(yB+yC)/2-10}" class="measure-text" transform="rotate(${-rot},${(xB+xC)/2+15},${(yB+yC)/2-10})">${c==='?'?'?':c+' cm'}</text>`;
     svg.innerHTML = ''; svg.appendChild(group);
 }
-
 generateSheet();
 </script>
 </body>
