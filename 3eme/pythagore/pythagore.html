@@ -111,7 +111,7 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyB0Cnuj4BDbk5HiWzj2wDZgXKubjBGnCLa54k-DUYFztqOk-JWsWKGlfKpOgfhwl47/exec"; // COLLE TON LIEN ICI
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbypSKnsoNpKy-5S7Cjws_FkaKFOACEdHq1fLp4Z8OcUs70BQM0yQyuUaCb-49d46e-9/exec"; // COLLE TON LIEN ICI
 // ------------------------------------
 
 let currentMode = 'theoreme';
@@ -272,7 +272,7 @@ function finishExam() {
     toggleAllSolutions();
     document.getElementById('btn-submit-exam').style.display = 'none';
 
-    if(isExam && WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbyB0Cnuj4BDbk5HiWzj2wDZgXKubjBGnCLa54k-DUYFztqOk-JWsWKGlfKpOgfhwl47/exec") {
+    if(isExam && WEB_APP_URL !== "https://script.google.com/macros/s/AKfycbypSKnsoNpKy-5S7Cjws_FkaKFOACEdHq1fLp4Z8OcUs70BQM0yQyuUaCb-49d46e-9/exec") {
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
