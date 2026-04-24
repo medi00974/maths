@@ -44,18 +44,15 @@
         .enonce { font-size: 1.1rem; line-height: 1.6; margin: 15px 0; text-align: left; border-left: 5px solid var(--primary); padding-left: 15px; }
         .solution { display: none; margin-top: 15px; padding: 20px; background: #f0fff4; border-radius: 10px; text-align: left; border: 1px solid var(--success); line-height: 1.8; }
 
-        .tri-small { fill: rgba(52, 152, 219, 0.2); visibility: hidden; }
-        .tri-big { fill: rgba(39, 174, 96, 0.1); visibility: hidden; }
-        .show-colors .tri-small, .show-colors .tri-big { visibility: visible; }
+        .tri-small { fill: rgba(52, 152, 219, 0.15); }
+        .tri-big { fill: rgba(39, 174, 96, 0.05); }
         .shape-line { stroke: var(--primary); stroke-width: 2.5; fill: none; }
         .parallel-line { stroke: #e74c3c; stroke-width: 3; }
         .label-point { font-weight: bold; font-size: 20px; fill: var(--primary); font-family: serif; }
         .measure-text { fill: var(--orange); font-size: 18px; font-weight: bold; }
-
-        #exam-result { display: none; font-size: 1.5rem; font-weight: bold; color: #8e44ad; margin: 20px; padding: 15px; border: 3px solid #8e44ad; border-radius: 10px; }
+        .dim-line { stroke: var(--orange); stroke-width: 1.5; marker-start: url(#arrow); marker-end: url(#arrow); }
 
         @media print {
-            body { background: white; padding: 0; }
             .mode-selector, .opt-container, .controls, .answer-zone, #nom-eleve-container { display: none !important; }
             body.print-with-solution .solution { display: block !important; }
         }
@@ -72,59 +69,41 @@
     </div>
 
     <div id="nom-eleve-container">
-        <label><strong>Nom de l'élève :</strong></label><br>
         <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
     </div>
 
-    <div id="exam-result"></div>
-
     <div class="opt-container">
-        <label><input type="checkbox" id="checkColor" onchange="generateSheet()"> 🎨 Couleur</label>
-        <label><input type="checkbox" id="printSolution" onchange="updatePrintSolution()"> ✅ Imprimer Corrigé</label>
-        <span style="margin-left:10px">Colonnes :</span>
-        <select id="colSelect" onchange="updateLayout()">
-            <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option>
-        </select>
-        <span style="margin-left:10px">Quantité :</span>
-        <select id="exoQty">
-            <option value="1">1</option><option value="4">4</option><option value="6" selected>6</option><option value="8">8</option>
-        </select>
+        <label><input type="checkbox" id="checkColor" checked onchange="generateSheet()"> 🎨 Couleur</label>
+        <label><input type="checkbox" id="printSolution" onchange="updatePrintSolution()"> ✅ Corrigé</label>
+        <select id="colSelect" onchange="updateLayout()"><option value="1">1 col</option><option value="2" selected>2 cols</option></select>
+        <select id="exoQty"><option value="4">4</option><option value="6" selected>6</option></select>
     </div>
 
     <div class="controls">
         <button id="btn-gen-main" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
-        <button id="btn-ans-main" class="action btn-ans" onclick="toggleAllSolutions()">👁️ Voir Corrigés</button>
+        <button class="action btn-ans" onclick="toggleAllSolutions()">👁️ Voir Corrigés</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
-        <button id="btn-submit-exam" class="action btn-ans" style="display:none; background:#8e44ad" onclick="finishExam()">Terminer l'examen</button>
     </div>
 
     <div id="print-wrapper" class="print-cols cols-2"></div>
 </div>
 
-<script>
-const WEB_APP_URL = "TON_URL_ICI"; 
+<svg width="0" height="0">
+    <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#e67e22" />
+        </marker>
+    </defs>
+</svg>
 
+<script>
 let currentMode = 'emboite';
-let answersMap = {}; 
-let isExam = false;
+let answersMap = {};
 
 function setMode(m, b) {
-    isExam = false; currentMode = m;
-    document.getElementById('nom-eleve-container').style.display = 'none';
-    document.getElementById('btn-submit-exam').style.display = 'none';
-    document.getElementById('btn-gen-main').style.display = 'inline-block';
+    currentMode = m;
     document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
     b.classList.add('active');
-    generateSheet();
-}
-
-function startExam(btn) {
-    isExam = true; currentMode = 'examen';
-    document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('nom-eleve-container').style.display = 'block';
-    document.getElementById('btn-submit-exam').style.display = 'inline-block';
-    document.getElementById('btn-gen-main').style.display = 'none';
     generateSheet();
 }
 
@@ -132,135 +111,109 @@ function updateLayout() { document.getElementById('print-wrapper').className = '
 function updatePrintSolution() { document.body.classList.toggle('print-with-solution', document.getElementById('printSolution').checked); }
 function toggleAllSolutions() {
     const sols = document.querySelectorAll('.solution');
-    if (sols.length === 0) return;
-    const target = sols[0].style.display === 'block' ? 'none' : 'block';
+    const target = sols[0]?.style.display === 'block' ? 'none' : 'block';
     sols.forEach(s => s.style.display = target);
 }
 
 function getLetters() { return "ABCDEFGHJKLMNPQRSTUVWXYZ".split("").sort(() => Math.random() - 0.5).slice(0, 5); }
 
 function generateSheet() {
-    const qty = isExam ? 6 : parseInt(document.getElementById('exoQty').value);
+    const qty = parseInt(document.getElementById('exoQty').value);
     const wrapper = document.getElementById('print-wrapper');
-    wrapper.innerHTML = ''; answersMap = {};
-
+    wrapper.innerHTML = '';
     for (let i = 0; i < qty; i++) {
         const exoDiv = document.createElement('div');
         exoDiv.className = 'exo-block';
-        let subMode = isExam ? ((i % 2 === 0) ? 'emboite' : 'reciproque') : currentMode;
-        
         exoDiv.innerHTML = `
             <div class="svg-wrap"><svg id="svg-${i}" width="400" height="320" viewBox="0 0 500 400"><g id="group-${i}"></g></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
-            <div class="answer-zone">
-                <input type="text" class="user-input" id="input-${i}" placeholder="Réponse">
-                ${!isExam ? `<button class="action" style="padding:5px 10px; background:var(--primary); color:white" onclick="checkSingleAnswer(${i})">OK</button>` : ''}
-                <div id="fb-${i}" class="feedback"></div>
-            </div>
+            <div class="answer-zone"><input type="text" class="user-input" id="input-${i}"> <div id="fb-${i}" class="feedback"></div></div>
             <div id="sol-${i}" class="solution"></div>`;
         wrapper.appendChild(exoDiv);
-        createExoLogic(i, subMode);
+        createExoLogic(i, currentMode);
     }
     MathJax.typesetPromise();
 }
 
 function createExoLogic(id, mode) {
-    const group = document.getElementById('group-' + id);
-    const rot = Math.floor(Math.random() * 20) - 10;
-    group.setAttribute("transform", `rotate(${rot}, 250, 200)`);
-    if(document.getElementById('checkColor').checked) group.parentElement.classList.add('show-colors');
+    const g = document.getElementById('group-' + id);
     const L = getLetters();
-    if (mode === 'reciproque') setupReciproque(id, L, rot); else setupThales(id, L, rot, mode);
-}
-
-function setupThales(id, L, rot, mode) {
-    const k = (1.5 + Math.random() * 0.5).toFixed(1);
+    const k = (1.4 + Math.random() * 0.6).toFixed(1);
     const v1 = (3 + Math.random() * 2).toFixed(1);
     const v1L = (v1 * k).toFixed(1);
     const v2 = (3 + Math.random() * 2).toFixed(1);
     const v2L = (v2 * k).toFixed(1);
-    const bS = (4 + Math.random() * 2).toFixed(1);
-    const bL = (bS * k).toFixed(1);
 
-    answersMap[id] = { val: v1, type: 'calcul' };
-    document.getElementById('enonce-'+id).innerHTML = `(${L[1]}${L[2]}) // (${L[3]}${L[4]}). Calcule $${L[0]}${L[1]}$.`;
-    
-    document.getElementById('sol-'+id).innerHTML = `<b>Corrigé :</b> D'après Thalès, $${L[0]}${L[1]} = ${v1}$.`;
-
-    const g = document.getElementById('group-'+id);
-    if(mode === 'emboite') drawEmb(g, L, rot, "?", v1L, v2, v2L, bS, bL);
-    else drawPap(g, L, rot, "?", v1L, v2, v2L, bS, bL);
+    if (mode === 'reciproque') {
+        const ok = Math.random() > 0.5;
+        const v2L_rec = ok ? (v2 * k).toFixed(1) : (v2 * k + 0.7).toFixed(1);
+        answersMap[id] = { val: ok ? "oui" : "non" };
+        document.getElementById('enonce-'+id).innerHTML = `Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont-elles parallèles ?`;
+        document.getElementById('sol-'+id).innerHTML = `
+            On calcule les rapports : <br>
+            $\\frac{${L[0]}${L[1]}}{${L[0]}${L[3]}} = \\frac{${v1}}{${v1L}} \\approx ${(v1/v1L).toFixed(2)}$ <br>
+            $\\frac{${L[0]}${L[2]}}{${L[0]}${L[4]}} = \\frac{${v2}}{${v2L_rec}} \\approx ${(v2/v2L_rec).toFixed(2)}$ <br>
+            Les rapports sont ${ok ? "égaux" : "différents"}, donc les droites ${ok ? "sont" : "ne sont pas"} parallèles.`;
+        drawEmb(g, L, v1, v1L, v2, v2L_rec);
+    } else {
+        answersMap[id] = { val: v1 };
+        document.getElementById('enonce-'+id).innerHTML = `Sachant que $(${L[1]}${L[2]}) // (${L[3]}${L[4]})$, calcule $${L[0]}${L[1]}$.`;
+        document.getElementById('sol-'+id).innerHTML = `
+            Dans les triangles $${L[0]}${L[1]}${L[2]}$ et $${L[0]}${L[3]}${L[4]}$ : <br>
+            Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont parallèles. <br>
+            D'après le théorème de Thalès : <br>
+            $$\\frac{${L[0]}${L[1]}}{${L[0]}${L[3]}} = \\frac{${L[0]}${L[2]}}{${L[0]}${L[4]}} = \\frac{${L[1]}${L[2]}}{${L[3]}${L[4]}}$$
+            $$\\frac{${L[0]}${L[1]}}{${v1L}} = \\frac{${v2}}{${v2L}}$$
+            Produit en croix : $${L[0]}${L[1]} = \\frac{${v1L} \\times ${v2}}{${v2L}}$ <br>
+            **$${L[0]}${L[1]} = ${v1}$**`;
+        mode === 'emboite' ? drawEmb(g, L, "?", v1L, v2, v2L) : drawPap(g, L, "?", v1L, v2, v2L);
+    }
 }
 
-function setupReciproque(id, L, rot) {
-    const ok = Math.random() > 0.5;
-    const v1 = 4, v1L = 8, v2 = 5, v2L = ok ? 10 : 12;
-    answersMap[id] = { val: ok ? "oui" : "non", type: 'reciproque' };
-    document.getElementById('enonce-'+id).innerHTML = `Les droites $(${L[1]}${L[2]})$ et $(${L[3]}${L[4]})$ sont-elles parallèles ?`;
-    document.getElementById('sol-'+id).innerHTML = `<b>Corrigé :</b> ${ok ? "Oui (Rapports égaux)" : "Non (Rapports différents)"}`;
-    drawEmb(document.getElementById('group-'+id), L, rot, v1, v1L, v2, v2L, "", "");
-}
-
-function checkSingleAnswer(id) {
-    const val = document.getElementById('input-'+id).value.toLowerCase().trim();
-    const isOk = val.includes(answersMap[id].val);
-    document.getElementById('fb-'+id).innerHTML = isOk ? "✅" : "❌";
-    return isOk;
-}
-
-function drawEmb(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
-    const Ax=250, Ay=80, Dx=150, Dy=350, Ex=350, Ey=350;
+function drawEmb(g, L, m1, m1L, m2, m2L) {
+    const Ax=250, Ay=50, Dx=120, Dy=350, Ex=380, Ey=350;
     const Bx=Ax+(Dx-Ax)*0.6, By=Ay+(Dy-Ay)*0.6, Cx=Ax+(Ex-Ax)*0.6, Cy=Ay+(Ey-Ay)*0.6;
     
     g.innerHTML = `
         <polygon points="${Ax},${Ay} ${Dx},${Dy} ${Ex},${Ey}" class="tri-big"/>
         <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
         <path d="M ${Ax} ${Ay} L ${Dx} ${Dy} L ${Ex} ${Ey} Z" class="shape-line"/>
-        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>`;
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>
+        <line x1="${Ax-40}" y1="${Ay}" x2="${Dx-40}" y2="${Dy}" class="dim-line"/>
+        <line x1="${Ax+40}" y1="${Ay}" x2="${Ex+40}" y2="${Ey}" class="dim-line"/>`;
     
-    addTxt(g, rot, Ax, Ay, L[0], "label-point", 0, -25);
-    addTxt(g, rot, Bx, By, L[1], "label-point", -25, 0); 
-    addTxt(g, rot, Cx, Cy, L[2], "label-point", 25, 0);
-    addTxt(g, rot, Dx, Dy, L[3], "label-point", -25, 25); 
-    addTxt(g, rot, Ex, Ey, L[4], "label-point", 25, 25);
-    
-    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, 0);
-    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", -70, 0); 
-    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 35, 0);
-    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", 70, 0);
+    addTxt(g, Ax, Ay, L[0], "label-point", 0, -15);
+    addTxt(g, Bx, By, L[1], "label-point", -20, 5);
+    addTxt(g, Dx, Dy, L[3], "label-point", -20, 20);
+    addTxt(g, Cx, Cy, L[2], "label-point", 20, 5);
+    addTxt(g, Ex, Ey, L[4], "label-point", 20, 20);
+    addTxt(g, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -25, 0);
+    addTxt(g, (Ax+Dx)/2-45, (Ay+Dy)/2, m1L, "measure-text", -15, 0);
+    addTxt(g, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 25, 0);
+    addTxt(g, (Ax+Ex)/2+45, (Ay+Ey)/2, m2L, "measure-text", 15, 0);
 }
 
-function drawPap(g, L, rot, m1, m1L, m2, m2L, bS, bL) {
-    const Ax=250, Ay=200, Bx=170, By=120, Cx=330, Cy=120, Dx=350, Dy=300, Ex=150, Ey=300;
+function drawPap(g, L, m1, m1L, m2, m2L) {
+    const Ax=250, Ay=200, Bx=150, By=80, Cx=350, Cy=80, Dx=350, Dy=320, Ex=150, Ey=320;
     g.innerHTML = `
         <polygon points="${Ax},${Ay} ${Bx},${By} ${Cx},${Cy}" class="tri-small"/>
         <polygon points="${Ax},${Ay} ${Dx},${Dy} ${Ex},${Ey}" class="tri-big"/>
-        <line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/>
-        <line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/>
-        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/>
-        <line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
-
-    addTxt(g, rot, Ax, Ay, L[0], "label-point", 25, 0);
-    addTxt(g, rot, Bx, By, L[1], "label-point", -20, -20);
-    addTxt(g, rot, Cx, Cy, L[2], "label-point", 20, -20);
-    addTxt(g, rot, Dx, Dy, L[3], "label-point", 20, 20);
-    addTxt(g, rot, Ex, Ey, L[4], "label-point", -20, 20);
-
-    addTxt(g, rot, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -35, -10);
-    addTxt(g, rot, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", 40, 10);
-    addTxt(g, rot, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 35, -10);
-    addTxt(g, rot, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", -40, 10);
+        <line x1="${Bx}" y1="${By}" x2="${Dx}" y2="${Dy}" class="shape-line"/><line x1="${Cx}" y1="${Cy}" x2="${Ex}" y2="${Ey}" class="shape-line"/>
+        <line x1="${Bx}" y1="${By}" x2="${Cx}" y2="${Cy}" class="parallel-line"/><line x1="${Ex}" y1="${Ey}" x2="${Dx}" y2="${Dy}" class="parallel-line"/>`;
+    addTxt(g, Ax, Ay, L[0], "label-point", 20, 5);
+    addTxt(g, Bx, By, L[1], "label-point", -15, -15); addTxt(g, Dx, Dy, L[3], "label-point", 15, 25);
+    addTxt(g, (Ax+Bx)/2, (Ay+By)/2, m1, "measure-text", -30, -5);
+    addTxt(g, (Ax+Dx)/2, (Ay+Dy)/2, m1L, "measure-text", 30, 5);
+    addTxt(g, (Ax+Cx)/2, (Ay+Cy)/2, m2, "measure-text", 30, -5);
+    addTxt(g, (Ax+Ex)/2, (Ay+Ey)/2, m2L, "measure-text", -30, 5);
 }
 
-function addTxt(g, rot, x, y, val, cls, ox, oy) {
-    if(!val) return;
+function addTxt(g, x, y, val, cls, ox, oy) {
     const t = document.createElementNS("http://www.w3.org/2000/svg", "text");
     t.setAttribute("x", x + ox); t.setAttribute("y", y + oy);
     t.setAttribute("class", cls); t.setAttribute("text-anchor", "middle");
-    t.setAttribute("transform", `rotate(${-rot}, ${x + ox}, ${y + oy})`);
     t.textContent = val; g.appendChild(t);
 }
-
 generateSheet();
 </script>
 </body>
