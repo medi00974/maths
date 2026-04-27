@@ -20,7 +20,7 @@
         
         /* Champ Nom pour le mode Examen */
         #nom-eleve-container { margin-bottom: 15px; display: none; background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px solid var(--purple); }
-        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 250px; font-size: 1rem; text-align: center; }
+        .input-nom { padding: 10px; border-radius: 5px; border: 2px solid var(--purple); width: 200px; font-size: 1rem; text-align: center; margin: 5px; }
 
         .opt-container { margin-bottom: 15px; background: var(--light); padding: 10px; border-radius: 8px; font-weight: bold; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
         
@@ -78,8 +78,10 @@
     </div>
 
     <div id="nom-eleve-container">
-        <label><strong>Nom de l'élève :</strong></label><br><br>
-        <input type="text" id="nom-eleve" class="input-nom" placeholder="Prénom NOM">
+        <label><strong>Identification de l'élève :</strong></label><br>
+        <input type="text" id="prenom-eleve" class="input-nom" placeholder="Prénom">
+        <input type="text" id="nom-eleve" class="input-nom" placeholder="NOM">
+        <input type="text" id="classe-eleve" class="input-nom" style="width:80px" placeholder="Classe">
     </div>
 
     <div id="exam-result"></div>
@@ -109,7 +111,7 @@
         <button id="btn-gen-main" class="action btn-gen" onclick="generateSheet()">🔄 Générer</button>
         <button id="btn-ans-main" class="action btn-ans" onclick="toggleAllSolutions()">👁️ Voir/Cacher Corrigés</button>
         <button class="action btn-print" onclick="window.print()">Imprimer 🖨️</button>
-        <button id="btn-submit-exam" class="action btn-ans" style="display:none; background:#8e44ad" onclick="finishExam()">Terminer l'examen</button>
+        <button id="btn-submit-exam" class="action btn-ans" style="display:none; background:#8e44ad" onclick="finishExam()">Valider mes réponses ✅</button>
     </div>
 
     <div id="print-wrapper" class="print-cols cols-2"></div>
@@ -125,7 +127,8 @@
 
 <script>
 // --- CONFIGURATION GOOGLE SHEETS ---
-const WEB_APP_URL = "TON_URL_ICI"; 
+// Remplace par l'URL de ton script Google Apps Script (voir instructions ci-dessous)
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyfo-auBTvBD2vGf1tzGyKtpgZfnxrKVmsQmuWMcToZKh9z-w6HFb4xgCa_Wn6q_SRv5Q/exec"; 
 // ------------------------------------
 
 let currentMode = 'emboite';
@@ -307,7 +310,13 @@ function checkSingleAnswer(id, mode) {
 
 function finishExam() {
     const nom = document.getElementById('nom-eleve').value;
-    if(isExam && !nom) { alert("Merci d'entrer ton nom avant de terminer."); return; }
+    const prenom = document.getElementById('prenom-eleve').value;
+    const classe = document.getElementById('classe-eleve').value;
+    
+    if(isExam && (!nom || !prenom || !classe)) { 
+        alert("Merci de remplir Prénom, Nom et Classe avant de valider."); 
+        return; 
+    }
 
     let correctCount = 0;
     let details = "";
@@ -317,7 +326,7 @@ function finishExam() {
         if(isCorrect) {
             correctCount++;
         } else {
-            details += `Exo ${i+1} (${document.getElementById('input-'+i).value}). `;
+            details += `Exo ${i+1}: ${document.getElementById('input-'+i).value} (attendu ${answersMap[i].val}) | `;
         }
     }
     const score = ((correctCount / qty) * 20).toFixed(1);
@@ -328,13 +337,28 @@ function finishExam() {
     toggleAllSolutions();
     document.getElementById('btn-submit-exam').style.display = 'none';
 
+    // ENVOI VERS GOOGLE SHEETS
     if(isExam && WEB_APP_URL !== "TON_URL_ICI") {
+        const data = {
+            date: new Date().toLocaleString('fr-FR'),
+            prenom: prenom,
+            nom: nom,
+            classe: classe,
+            note: score,
+            erreurs: details || "Aucune"
+        };
+
         fetch(WEB_APP_URL, {
             method: 'POST',
             mode: 'no-cors',
-            body: JSON.stringify({ nom: nom, note: score, details: details || "Thalès : Parfait" })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        }).then(() => {
+            alert("✅ Tes résultats ont été envoyés avec succès !");
+        }).catch(err => {
+            alert("Erreur d'envoi. Vérifie ta connexion.");
+            console.error(err);
         });
-        alert("Résultats envoyés au tableau de bord !");
     }
 }
 
@@ -405,5 +429,4 @@ function addTxt(g, rot, x, y, val, cls, ox, oy) {
 generateSheet();
 </script>
 </body>
-</html>
 </html>
