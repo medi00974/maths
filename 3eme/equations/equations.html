@@ -18,7 +18,6 @@ body { background: var(--light); color: var(--dark); margin: 0; padding: 16px; l
 header { text-align: center; border-bottom: 3px solid var(--primary); padding-bottom: 12px; margin-bottom: 20px; }
 h1 { color: var(--primary); margin: 0 0 4px; font-size: 21px; }
 .subtitle { font-style: italic; color: #666; margin: 0; font-size: 13px; }
-
 .toolbar { background: #f5f7fa; border: 1px solid #cfd8dc; padding: 10px 14px; border-radius: 6px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
 button { padding: 9px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 13px; transition: background .2s; }
@@ -29,17 +28,12 @@ button { padding: 9px 16px; border: none; border-radius: 4px; cursor: pointer; f
 .btn-exam  { background: #7b1fa2; color: white; }
 .btn-exam:hover  { background: #4a148c; }
 .btn-exam.active { background: #4a148c; box-shadow: inset 0 2px 4px rgba(0,0,0,.3); }
-
 #note-badge { display: none; align-items: center; justify-content: center; background: #4a148c; color: white; border-radius: 8px; padding: 6px 18px; font-size: 22px; font-weight: bold; min-width: 90px; text-align: center; }
 #note-badge.visible { display: flex; }
-
 .level-card { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 18px; overflow: hidden; page-break-inside: avoid; }
 .level-header { background: var(--primary); color: white; padding: 8px 14px; font-weight: bold; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-
-/* Badge points : caché par défaut, visible seulement en mode examen */
 .level-pts { background: rgba(255,255,255,.25); border-radius: 10px; padding: 2px 9px; font-size: 12px; font-weight: normal; display: none; }
 body.exam-mode .level-pts { display: inline-block; }
-
 .level-body { padding: 14px; }
 .intro { margin: 0 0 10px; font-size: 13px; color: #555; }
 .grid-eq { display: flex; gap: 14px; }
@@ -47,14 +41,12 @@ body.exam-mode .level-pts { display: inline-block; }
 .equation-box { background: #fcfbfa; padding: 10px; border: 1px solid var(--primary); border-left: 5px solid var(--primary); border-radius: 4px; text-align: center; margin-bottom: 10px; min-height: 56px; display: flex; align-items: center; justify-content: center; }
 math { font-family: 'Cambria Math','Times New Roman',serif; font-size: 21px; }
 .sos-title { color: var(--warning); font-weight: bold; font-size: 12px; margin: 10px 0 6px; text-transform: uppercase; }
-
 .bar-wrap { margin: 6px 0; }
 .bar-row { display: flex; border: 2px solid var(--dark); border-radius: 4px; margin-bottom: 5px; background: white; overflow: hidden; height: 38px; }
 .bar-cell { flex: 1; border-right: 2px solid var(--dark); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #bbb; }
 .bar-cell:last-child { border-right: none; }
 .bar-cell.cst { background: #fff9e6; flex: 0 0 60px; }
 .bar-row.total .bar-cell { flex: 1; }
-
 .answer-zone { display: none; margin-top: 10px; border: 2px dashed #9c27b0; border-radius: 4px; padding: 10px; background: #faf5ff; min-height: 70px; }
 .answer-zone label { font-size: 12px; font-weight: bold; color: #7b1fa2; display: block; margin-bottom: 6px; }
 .answer-input { width: 100%; border: 1px solid #ce93d8; border-radius: 4px; padding: 7px 10px; font-size: 14px; font-family: 'Cambria Math','Times New Roman',serif; background: white; color: var(--dark); outline: none; }
@@ -63,21 +55,17 @@ math { font-family: 'Cambria Math','Times New Roman',serif; font-size: 21px; }
 .answer-input.wrong   { background: #ffebee; border-color: #c62828; color: #b71c1c; }
 .correction { font-size: 12px; margin-top: 4px; color: #555; display: none; }
 .correction.visible { display: block; }
-
-body.exam-mode .sos-title    { display: none; }
-body.exam-mode .bar-wrap     { display: none; }
-body.exam-mode .dist-table   { display: none; }
-body.exam-mode .answer-zone  { display: block; }
-
+body.exam-mode .sos-title   { display: none; }
+body.exam-mode .bar-wrap    { display: none; }
+body.exam-mode .dist-table  { display: none; }
+body.exam-mode .answer-zone { display: block; }
 .dist-table { border-collapse: collapse; margin: 10px auto; }
 .dist-table td, .dist-table th { border: 2px solid var(--dark); width: 60px; height: 38px; background: #fff; }
 .dist-table th.hgrey { background: #f5f5f5; }
 .dist-table th.corner { border: none; width: 38px; }
-
 .product-split { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
 .split-branch { flex: 1; border: 2px dashed #b0bec5; border-radius: 4px; padding: 10px; text-align: center; min-height: 65px; background: #fafafa; }
 .split-or { display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--primary); font-style: italic; }
-
 .test-zone { display: flex; flex-direction: column; gap: 7px; margin-top: 10px; }
 .test-box { border: 1px dashed #b0bec5; border-radius: 4px; padding: 9px; background: #fafafa; }
 .test-box-title { font-size: 13px; font-weight: bold; color: var(--dark); margin-bottom: 5px; }
@@ -86,7 +74,6 @@ body.exam-mode .answer-zone  { display: block; }
 body.exam-mode .test-box-lines { display: none; }
 body.exam-mode .test-answer { display: block; }
 body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
-
 @media print {
   body { background: #fff; padding: 0; }
   .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
@@ -116,14 +103,14 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
   </div>
 
   <header>
-    <h1> Automatismes &amp; Équations</h1>
-    <p class="subtitle">Dispositif d'aide visuelle et de remédiation </p>
+    <h1>Parcours Différencié : Automatismes &amp; Équations</h1>
+    <p class="subtitle">Dispositif d'aide visuelle et de remédiation active — Nombres Relatifs Inclus</p>
   </header>
 
   <!-- Niveau 0 -->
   <div class="level-card">
     <div class="level-header">
-      <span>Niveau 0 : Tester si une égalité est vraie ou fausse </span>
+      <span>Niveau 0 : Tester si une égalité est vraie ou fausse (Substitution)</span>
       <span class="level-pts">2 pts</span>
     </div>
     <div class="level-body">
@@ -135,24 +122,20 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
             <div class="test-box">
               <div class="test-box-title" id="titleVal1"></div>
               <div class="test-box-lines"></div>
-              <div class="test-answer">
-                <div class="answer-zone">
-                  <label>Réponse (vrai / faux + calcul) :</label>
-                  <input class="answer-input" type="text" data-q="t1" placeholder="ex: gauche = … droite = … → faux">
-                  <div class="correction" id="corr-t1"></div>
-                </div>
-              </div>
+              <div class="test-answer"><div class="answer-zone">
+                <label>Réponse (vrai / faux + calcul) :</label>
+                <input class="answer-input" type="text" data-q="t1" placeholder="ex: gauche = … droite = … → faux">
+                <div class="correction" id="corr-t1"></div>
+              </div></div>
             </div>
             <div class="test-box">
               <div class="test-box-title" id="titleVal2"></div>
               <div class="test-box-lines"></div>
-              <div class="test-answer">
-                <div class="answer-zone">
-                  <label>Réponse (vrai / faux + calcul) :</label>
-                  <input class="answer-input" type="text" data-q="t2" placeholder="ex: gauche = … droite = … → vrai">
-                  <div class="correction" id="corr-t2"></div>
-                </div>
-              </div>
+              <div class="test-answer"><div class="answer-zone">
+                <label>Réponse (vrai / faux + calcul) :</label>
+                <input class="answer-input" type="text" data-q="t2" placeholder="ex: gauche = … droite = … → vrai">
+                <div class="correction" id="corr-t2"></div>
+              </div></div>
             </div>
           </div>
         </div>
@@ -163,7 +146,7 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
   <!-- Niveau 1 -->
   <div class="level-card">
     <div class="level-header">
-      <span>Niveau 1 : Équations du type ax = b </span>
+      <span>Niveau 1 : Équations du type ax = b (Opération inverse)</span>
       <span class="level-pts">4 pts</span>
     </div>
     <div class="level-body">
@@ -172,21 +155,17 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
           <div class="equation-box" id="eqA"></div>
           <div class="sos-title">🆘 SOS Schéma à compléter :</div>
           <div class="bar-wrap" id="barA"></div>
-          <div class="answer-zone">
-            <label>Solution x = </label>
+          <div class="answer-zone"><label>Solution x = </label>
             <input class="answer-input" type="text" data-q="A" placeholder="Entrer la valeur de x">
-            <div class="correction" id="corr-A"></div>
-          </div>
+            <div class="correction" id="corr-A"></div></div>
         </div>
         <div class="eq-item">
           <div class="equation-box" id="eqB"></div>
           <div class="sos-title">🆘 SOS Schéma à compléter :</div>
           <div class="bar-wrap" id="barB"></div>
-          <div class="answer-zone">
-            <label>Solution x = </label>
+          <div class="answer-zone"><label>Solution x = </label>
             <input class="answer-input" type="text" data-q="B" placeholder="Entrer la valeur de x">
-            <div class="correction" id="corr-B"></div>
-          </div>
+            <div class="correction" id="corr-B"></div></div>
         </div>
       </div>
     </div>
@@ -195,7 +174,7 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
   <!-- Niveau 2 -->
   <div class="level-card">
     <div class="level-header">
-      <span>Niveau 2 : Équations à deux étapes </span>
+      <span>Niveau 2 : Équations à deux étapes (ax + b = c)</span>
       <span class="level-pts">4 pts</span>
     </div>
     <div class="level-body">
@@ -204,21 +183,17 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
           <div class="equation-box" id="eqC"></div>
           <div class="sos-title">🆘 SOS Schéma (ax + b) :</div>
           <div class="bar-wrap" id="barC"></div>
-          <div class="answer-zone">
-            <label>Solution x = </label>
+          <div class="answer-zone"><label>Solution x = </label>
             <input class="answer-input" type="text" data-q="C" placeholder="Entrer la valeur de x">
-            <div class="correction" id="corr-C"></div>
-          </div>
+            <div class="correction" id="corr-C"></div></div>
         </div>
         <div class="eq-item">
           <div class="equation-box" id="eqD"></div>
           <div class="sos-title">🆘 SOS Schéma (ax + b) :</div>
           <div class="bar-wrap" id="barD"></div>
-          <div class="answer-zone">
-            <label>Solution x = </label>
+          <div class="answer-zone"><label>Solution x = </label>
             <input class="answer-input" type="text" data-q="D" placeholder="Entrer la valeur de x">
-            <div class="correction" id="corr-D"></div>
-          </div>
+            <div class="correction" id="corr-D"></div></div>
         </div>
       </div>
     </div>
@@ -227,38 +202,34 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
   <!-- Niveau 3 -->
   <div class="level-card">
     <div class="level-header">
-      <span>Niveau 3 : Distributivité simple</span>
-      <span class="level-pts">6 pts</span>
+      <span>Niveau 3 : Distributivité simple (Tableau + Barres)</span>
+      <span class="level-pts">4 pts</span>
     </div>
     <div class="level-body">
       <div class="grid-eq">
         <div class="eq-item">
           <div class="equation-box" id="eqE"></div>
-          <div class="sos-title">🆘 SOS Distributivité  :</div>
+          <div class="sos-title">🆘 SOS Distributivité (Vierge) :</div>
           <table class="dist-table">
             <tr><th class="corner"></th><th class="hgrey"></th><th class="hgrey"></th></tr>
             <tr><th class="hgrey"></th><td></td><td></td></tr>
           </table>
           <div class="bar-wrap" id="barE"></div>
-          <div class="answer-zone">
-            <label>Solution x = </label>
+          <div class="answer-zone"><label>Solution x = </label>
             <input class="answer-input" type="text" data-q="E" placeholder="Entrer la valeur de x">
-            <div class="correction" id="corr-E"></div>
-          </div>
+            <div class="correction" id="corr-E"></div></div>
         </div>
         <div class="eq-item">
           <div class="equation-box" id="eqF"></div>
-          <div class="sos-title">🆘 SOS Distributivité  :</div>
+          <div class="sos-title">🆘 SOS Distributivité (Vierge) :</div>
           <table class="dist-table">
             <tr><th class="corner"></th><th class="hgrey"></th><th class="hgrey"></th></tr>
             <tr><th class="hgrey"></th><td></td><td></td></tr>
           </table>
           <div class="bar-wrap" id="barF"></div>
-          <div class="answer-zone">
-            <label>Solution x = </label>
+          <div class="answer-zone"><label>Solution x = </label>
             <input class="answer-input" type="text" data-q="F" placeholder="Entrer la valeur de x">
-            <div class="correction" id="corr-F"></div>
-          </div>
+            <div class="correction" id="corr-F"></div></div>
         </div>
       </div>
     </div>
@@ -274,31 +245,56 @@ body.exam-mode .test-answer .answer-zone { display: block; margin-top: 0; }
       <div class="grid-eq">
         <div class="eq-item">
           <div class="equation-box" id="eqG"></div>
-          <div class="sos-title">🆘 SOS  :</div>
+          <div class="sos-title">🆘 SOS Structure Disjonctive :</div>
           <div class="product-split">
             <div class="split-branch"><span style="font-size:12px;color:#777;display:block;margin-bottom:6px">1er Facteur = 0</span><br></div>
             <div class="split-or">OU</div>
             <div class="split-branch"><span style="font-size:12px;color:#777;display:block;margin-bottom:6px">2ème Facteur = 0</span><br></div>
           </div>
-          <div class="answer-zone">
-            <label>Solutions x₁ et x₂ :</label>
+          <div class="answer-zone"><label>Solutions x₁ et x₂ :</label>
             <input class="answer-input" type="text" data-q="G" placeholder="ex: x = 3 ou x = -5">
-            <div class="correction" id="corr-G"></div>
-          </div>
+            <div class="correction" id="corr-G"></div></div>
         </div>
         <div class="eq-item">
           <div class="equation-box" id="eqH"></div>
-          <div class="sos-title">🆘 SOS :</div>
+          <div class="sos-title">🆘 SOS Structure Disjonctive :</div>
           <div class="product-split">
             <div class="split-branch"><span style="font-size:12px;color:#777;display:block;margin-bottom:6px">1er Facteur = 0</span><br></div>
             <div class="split-or">OU</div>
             <div class="split-branch"><span style="font-size:12px;color:#777;display:block;margin-bottom:6px">2ème Facteur = 0</span><br></div>
           </div>
-          <div class="answer-zone">
-            <label>Solutions x₁ et x₂ :</label>
+          <div class="answer-zone"><label>Solutions x₁ et x₂ :</label>
             <input class="answer-input" type="text" data-q="H" placeholder="ex: x = 2 ou x = -4">
-            <div class="correction" id="corr-H"></div>
-          </div>
+            <div class="correction" id="corr-H"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Niveau 5 -->
+  <div class="level-card">
+    <div class="level-header">
+      <span>Niveau 5 : Équations avec x des deux côtés (ax + b = cx + d)</span>
+      <span class="level-pts">6 pts</span>
+    </div>
+    <div class="level-body">
+      <p class="intro">Regroupe les termes en x d'un côté et les constantes de l'autre.</p>
+      <div class="grid-eq">
+        <div class="eq-item">
+          <div class="equation-box" id="eqI"></div>
+          <div class="sos-title">🆘 SOS Schéma à compléter :</div>
+          <div class="bar-wrap" id="barI"></div>
+          <div class="answer-zone"><label>Solution x = </label>
+            <input class="answer-input" type="text" data-q="I" placeholder="Entrer la valeur de x">
+            <div class="correction" id="corr-I"></div></div>
+        </div>
+        <div class="eq-item">
+          <div class="equation-box" id="eqJ"></div>
+          <div class="sos-title">🆘 SOS Schéma à compléter :</div>
+          <div class="bar-wrap" id="barJ"></div>
+          <div class="answer-zone"><label>Solution x = </label>
+            <input class="answer-input" type="text" data-q="J" placeholder="Entrer la valeur de x">
+            <div class="correction" id="corr-J"></div></div>
         </div>
       </div>
     </div>
@@ -331,13 +327,24 @@ function barSimple(id, a) {
     <div class="bar-row">${cells}</div>
     <div class="bar-row total"><div class="bar-cell"></div></div>`;
 }
+
 function barTwoStep(id, a) {
   const n = Math.abs(a);
-  let xCells = Array.from({length: n}, () => `<div class="bar-cell"></div>`).join('');
-  xCells += `<div class="bar-cell cst"></div>`;
+  const cells = Array.from({length: n}, () => `<div class="bar-cell"></div>`).join('');
   document.getElementById(id).innerHTML = `
-    <div class="bar-row">${xCells}</div>
+    <div class="bar-row">${cells}<div class="bar-cell cst"></div></div>
     <div class="bar-row total"><div class="bar-cell"></div></div>`;
+}
+
+/* Niveau 5 : seulement 2 lignes, pas de 3e barre */
+function barDoubleLine(id, a, c) {
+  const nL = Math.abs(a);
+  const nR = Math.abs(c);
+  const leftCells  = Array.from({length: nL}, () => `<div class="bar-cell"></div>`).join('');
+  const rightCells = Array.from({length: nR}, () => `<div class="bar-cell"></div>`).join('');
+  document.getElementById(id).innerHTML = `
+    <div class="bar-row">${leftCells}<div class="bar-cell cst"></div></div>
+    <div class="bar-row">${rightCells}<div class="bar-cell cst"></div></div>`;
 }
 
 function normalize(str) { return str.trim().replace(',', '.').replace(/\s/g, ''); }
@@ -354,10 +361,8 @@ function toggleExam() {
   document.body.classList.toggle('exam-mode', examMode);
   document.getElementById('btnExam').classList.toggle('active', examMode);
   const badge = document.getElementById('note-badge');
-
   if (!examMode) {
-    // Corriger et noter
-    const pts = {A:2,B:2,C:2,D:2,E:3,F:3,G:2,H:2,t1:1,t2:1};
+    const pts = {A:2,B:2,C:2,D:2,E:2,F:2,G:2,H:2,I:3,J:3,t1:1,t2:1};
     let score = 0;
     document.querySelectorAll('.answer-input').forEach(inp => {
       const q = inp.dataset.q;
@@ -378,12 +383,8 @@ function toggleExam() {
     badge.classList.add('visible');
   } else {
     badge.classList.remove('visible');
-    document.querySelectorAll('.answer-input').forEach(inp => {
-      inp.value = ''; inp.classList.remove('correct','wrong');
-    });
-    document.querySelectorAll('.correction').forEach(c => {
-      c.classList.remove('visible'); c.textContent = '';
-    });
+    document.querySelectorAll('.answer-input').forEach(inp => { inp.value = ''; inp.classList.remove('correct','wrong'); });
+    document.querySelectorAll('.correction').forEach(c => { c.classList.remove('visible'); c.textContent = ''; });
   }
 }
 
@@ -400,9 +401,9 @@ function generateEquations() {
   let v1=rnd(2,5), v2=rnd(-5,-2);
   document.getElementById('titleVal1').innerText = `👉 Tester pour x = ${v1} :`;
   document.getElementById('titleVal2').innerText = `👉 Tester pour x = ${v2} (attention au carré !) :`;
-  const lhs = x => -c0*x*x + b0, rhs = x => -cr*x - dr;
-  answers['t1'] = lhs(v1) === rhs(v1) ? 'vrai' : 'faux';
-  answers['t2'] = lhs(v2) === rhs(v2) ? 'vrai' : 'faux';
+  const lhs0 = x => -c0*x*x+b0, rhs0 = x => -cr*x-dr;
+  answers['t1'] = lhs0(v1)===rhs0(v1) ? 'vrai' : 'faux';
+  answers['t2'] = lhs0(v2)===rhs0(v2) ? 'vrai' : 'faux';
 
   let aA=rnd(2,7), solA=rnd(-8,8), bA=aA*solA;
   document.getElementById('eqA').innerHTML = `<math><mn>${aA}</mn><mi>x</mi><mo>=</mo><mn>${bA}</mn></math>`;
@@ -453,9 +454,38 @@ function generateEquations() {
   let startH1=aH1<0?`<mo>-</mo><mn>${Math.abs(aH1)}</mn>`:`<mn>${aH1}</mn>`;
   document.getElementById('eqH').innerHTML = `<math><mo>(</mo>${startH1}<mi>x</mi><mo>${opH1}</mo><mn>${Math.abs(bH1)}</mn><mo>)</mo><mo>(</mo><mn>${aH2}</mn><mi>x</mi><mo>${opH2}</mo><mn>${Math.abs(bH2)}</mn><mo>)</mo><mo>=</mo><mn>0</mn></math>`;
   answers['H'] = [sH1, sH2];
+
+  function genLevel5(eqId, barId, qKey) {
+    let a, c;
+    do {
+      a = rnd(-5, 7);
+      c = rnd(-4, 6);
+    } while (a === c || Math.abs(a-c) > 5 || Math.abs(a) > 6 || Math.abs(c) > 6);
+    const sol = rnd(-6, 6);
+    const b = rnd(-8, 8, false);
+    const d = a*sol + b - c*sol;
+    function termX(coef) {
+      if (coef === 1)  return `<mi>x</mi>`;
+      if (coef === -1) return `<mo>-</mo><mi>x</mi>`;
+      if (coef < 0)    return `<mo>-</mo><mn>${Math.abs(coef)}</mn><mi>x</mi>`;
+      return `<mn>${coef}</mn><mi>x</mi>`;
+    }
+    function termCst(val) {
+      if (val === 0) return '';
+      return val < 0 ? `<mo>-</mo><mn>${Math.abs(val)}</mn>` : `<mo>+</mo><mn>${val}</mn>`;
+    }
+    document.getElementById(eqId).innerHTML =
+      `<math>${termX(a)}${termCst(b)}<mo>=</mo>${termX(c)}${termCst(d)}</math>`;
+    barDoubleLine(barId, a, c);
+    answers[qKey] = fmtFrac(d - b, a - c);
+  }
+
+  genLevel5('eqI', 'barI', 'I');
+  genLevel5('eqJ', 'barJ', 'J');
 }
 
 window.onload = generateEquations;
 </script>
 </body>
 </html>
+
