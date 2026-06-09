@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratoire de Numération - Double Ligne Propre</title>
+    <style>
+        :root {
+            --bg-dark: #1e222b;
+            --card-bg: #282c34;
+            --neon-violet: #a362ff;
+            --neon-green: #00e676;
+            --text-light: #abb2bf;
+            --grid-border: #3e4452;
+            --strip-bg: #181a1f;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+        }
+
+        .container {
+            background: var(--card-bg);
+            border: 2px solid var(--neon-violet);
+            border-radius: 12px;
+            padding: 25px;
+            width: 98%;
+            max-width: 1350px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: white;
+            margin-top: 0;
+            font-size: 22px;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--grid-border);
+            padding-bottom: 15px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], button {
+            background: #181a1f;
+            color: white;
+            padding: 12px 18px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid var(--grid-border);
+            outline: none;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--neon-green);
+        }
+
+        button {
+            background-color: var(--neon-violet);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #8a46e5;
+            box-shadow: 0 0 10px rgba(163, 98, 255, 0.5);
+        }
+
+        /* Grille fixe du tableau (11 colonnes) */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 6px;
+            margin-top: 60px;
+            position: relative;
+        }
+
+        .unit-header {
+            background-color: #21252b;
+            border: 1px solid var(--grid-border);
+            border-radius: 6px 6px 0 0;
+            padding: 12px 2px;
+            font-size: 11px;
+            color: #9da5b4;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .unit-header .power {
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .unit-header.active {
+            background-color: #2c313c;
+            border: 1px solid var(--neon-green);
+        }
+
+        /* LIGNE 1 : Modèle Fixe */
+        .model-row-container {
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .cell-model {
+            background: #21252b;
+            border: 1px solid var(--grid-border);
+            height: 75px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #e5c07b;
+        }
+
+        .cell-model.active-unit {
+            background-color: #28352e !important;
+            border-color: var(--neon-green) !important;
+        }
+
+        /* LIGNE 2 : Fenêtre de la réglette coulissante */
+        .slider-window {
+            background: var(--bg-dark);
+            border: 1px solid var(--grid-border);
+            border-radius: 0 0 12px 12px;
+            height: 95px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 6px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .strip-track {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
+        }
+
+        .strip-cell {
+            width: 114px;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            border-right: 1px dashed rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .student-input {
+            width: 75px;
+            height: 75px;
+            border: 1px dashed var(--grid-border);
+            background: var(--strip-bg);
+            border-radius: 8px;
+            text-align: center;
+            font-size: 34px;
+            font-weight: bold;
+            color: var(--neon-green);
+            outline: none;
+            font-family: inherit;
+            z-index: 5;
+        }
+
+        .student-input:focus {
+            border-color: var(--neon-violet);
+            background-color: #2c313c;
+        }
+
+        /* Zéros automatiques qui apparaissent au décalage */
+        .auto-zero {
+            position: absolute;
+            font-size: 34px;
+            font-weight: bold;
+            color: #5c6370;
+            opacity: 0.8;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .strip-track.ready-to-drag { cursor: grab; }
+        .strip-track.ready-to-drag:active { cursor: grabbing; }
+        .strip-track.ready-to-drag .student-input { cursor: grab; }
+        .strip-track.ready-to-drag .student-input:active { cursor: grabbing; }
+
+        .comma-fixed {
+            position: absolute;
+            left: calc(100% / 11 * 6 - 8px); 
+            bottom: 12px;
+            font-size: 60px;
+            color: var(--neon-green);
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .label-bubble {
+            position: absolute;
+            background: #4b5263;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: sans-serif;
+            white-space: nowrap;
+            z-index: 20;
+        }
+
+        .label-unit {
+            top: -45px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 1px solid var(--neon-green);
+        }
+
+        .instructions {
+            background-color: #21252b;
+            border-left: 4px solid var(--neon-violet);
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Glisse nombre </h1>
+    
+    <div class="instructions">
+        <strong>Consigne élève :</strong><br>
+        1. Regarde le nombre demandé sur la <strong>Ligne 1</strong>.<br>
+        2. Sur la <strong>Ligne 2</strong>, écris les chiffres significatifs en plaçant le chiffre des unités sur la case verte ($10^0$).<br>
+        3. Glisse la réglette vers la gauche pour aligner ton nombre sous le modèle.
+    </div>
+
+    <div class="controls">
+        <label for="numberInput">Nombre demandé :</label>
+        <input type="text" id="numberInput" value="450000">
+        <button onclick="resetAll()">Réinitialiser</button>
+    </div>
+
+    <div class="grid-container" id="gridHeaderContainer">
+        <div class="unit-header" id="h-5"><div class="power">10⁵</div>Centaines de mille</div>
+        <div class="unit-header" id="h-4"><div class="power">10⁴</div>Dizaines de mille</div>
+        <div class="unit-header" id="h-3"><div class="power">10³</div>Unités de mille</div>
+        <div class="unit-header" id="h-2"><div class="power">10²</div>Centaines</div>
+        <div class="unit-header" id="h-1"><div class="power">10¹</div>Dizaines</div>
+        <div class="unit-header" id="h-0" style="border: 1px solid var(--neon-green); border-bottom: none;"><div class="power" style="color: var(--neon-green);">10⁰</div>UNITÉS</div>
+        <div class="unit-header" id="h--1"><div class="power">10⁻¹</div>Dixièmes</div>
+        <div class="unit-header" id="h--2"><div class="power">10⁻²</div>Centièmes</div>
+        <div class="unit-header" id="h--3"><div class="power">10⁻³</div>Millièmes</div>
+        <div class="unit-header" id="h--4"><div class="power">10⁻⁴</div>Dix-millièmes</div>
+        <div class="unit-header" id="h--5"><div class="power">10⁻⁵</div>Cent-millièmes</div>
+    </div>
+
+    <div class="model-row-container" id="modelRow"></div>
+
+    <div class="slider-window" id="sliderWindow">
+        <div class="strip-track" id="stripTrack"></div>
+        <div class="comma-fixed">,</div>
+    </div>
+</div>
+
+<script>
+    const columnExponents = [5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5];
+    let targetInputValue = "450000";
+
+    const totalStripCells = 31;
+    const stripCenterIndex = 15; // La case centrale de la réglette face aux UNITÉS au départ
+    let studentDigitsArray = Array(totalStripCells).fill("");
+
+    let isDragging = false;
+    let startX = 0;
+    const dragThreshold = 45;
+    let currentShift = 0;
+
+    const numberInput = document.getElementById('numberInput');
+    const modelRow = document.getElementById('modelRow');
+    const stripTrack = document.getElementById('stripTrack');
+    const sliderWindow = document.getElementById('sliderWindow');
+
+    window.addEventListener('resize', alignCellsWidth);
+
+    numberInput.addEventListener('input', () => {
+        targetInputValue = numberInput.value.trim().replace(',', '.');
+        currentShift = 0;
+        studentDigitsArray.fill(""); 
+        renderAll();
+    });
+
+    function renderAll() {
+        // --- 1. RENDU DE LA LIGNE 1 (MODÈLE) ---
+        modelRow.innerHTML = "";
+        
+        let numAsFloat = parseFloat(targetInputValue) || 0;
+        const parts = Math.abs(numAsFloat).toString().split('.');
+        const integerPart = parts[0];
+        const decimalPart = parts[1] || '';
+
+        columnExponents.forEach(exp => {
+            const cell = document.createElement('div');
+            cell.className = 'cell-model';
+            if (exp === 0) cell.classList.add('active-unit');
+
+            let digit = "";
+            if (numAsFloat < 1 && numAsFloat > 0 && exp === 0) {
+                digit = "0";
+            } else if (exp >= 0 && exp < integerPart.length) {
+                digit = integerPart[integerPart.length - 1 - exp];
+            } else if (exp < 0 && Math.abs(exp) <= decimalPart.length) {
+                digit = decimalPart[Math.abs(exp) - 1];
+            }
+            
+            cell.innerText = digit;
+            modelRow.appendChild(cell);
+
+            const header = document.getElementById(`h-${exp}`);
+            const oldLabels = header.querySelectorAll('.label-bubble');
+            oldLabels.forEach(l => l.remove());
+        });
+
+        const unitHeader = document.getElementById(`h-0`);
+        const lblUnit = document.createElement('div');
+        lblUnit.className = 'label-bubble label-unit';
+        lblUnit.innerText = "Pivot Fixe";
+        unitHeader.appendChild(lblUnit);
+
+        // --- 2. RENDU DE LA LIGNE 2 (RÉGLETTE ÉLÈVE) ---
+        stripTrack.innerHTML = "";
+        let hasAnyInput = false;
+
+        // On cherche les index extrêmes (gauche et droite) où l'élève a tapé quelque chose
+        let leftmostFilledIndex = Infinity;
+        let rightmostFilledIndex = -Infinity;
+
+        for (let i = 0; i < totalStripCells; i++) {
+            if (studentDigitsArray[i] !== "") {
+                hasAnyInput = true;
+                if (i < leftmostFilledIndex) leftmostFilledIndex = i;
+                if (i > rightmostFilledIndex) rightmostFilledIndex = i;
+            }
+        }
+
+        // L'index de la réglette qui se trouve actuellement sous la colonne UNITÉS (10^0)
+        // Au départ (shift=0), c'est la case centrale (15). Si on glisse vers la gauche (shift négatif), cet index augmente.
+        let cellUnderUnitsIndex = stripCenterIndex - currentShift;
+
+        for (let i = 0; i < totalStripCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'strip-cell';
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'student-input';
+            input.maxLength = 1;
+            input.value = studentDigitsArray[i];
+
+            input.addEventListener('input', (e) => {
+                studentDigitsArray[i] = e.target.value.trim();
+                renderAll(); 
+            });
+
+            cell.appendChild(input);
+
+            // LOGIQUE DES ZÉROS AUTOMATIQUES
+            if (hasAnyInput && studentDigitsArray[i] === "") {
+                
+                // Cas 1 : Glissement vers la gauche (Ex: l'élève a écrit 45 à droite et ramène vers la gauche)
+                // Il faut mettre des zéros entre la case écrite la plus à gauche et la case des UNITÉS
+                if (i < leftmostFilledIndex && i >= cellUnderUnitsIndex) {
+                    const zeroSpan = document.createElement('span');
+                    zeroSpan.className = 'auto-zero';
+                    zeroSpan.innerText = "0";
+                    cell.appendChild(zeroSpan);
+                }
+
+                // Cas 2 : Glissement vers la droite (Ex: grands nombres, l'élève déplace le bloc vers la droite)
+                // Il faut boucher les trous par des zéros entre la case écrite la plus à droite et la case des UNITÉS
+                if (i > rightmostFilledIndex && i <= cellUnderUnitsIndex) {
+                    const zeroSpan = document.createElement('span');
+                    zeroSpan.className = 'auto-zero';
+                    zeroSpan.innerText = "0";
+                    cell.appendChild(zeroSpan);
+                }
+            }
+
+            stripTrack.appendChild(cell);
+        }
+
+        if (hasAnyInput) {
+            stripTrack.classList.add('ready-to-drag');
+        } else {
+            stripTrack.classList.remove('ready-to-drag');
+        }
+
+        alignCellsWidth();
+    }
+
+    function alignCellsWidth() {
+        const headerCell = document.getElementById('h-5');
+        if (!headerCell) return;
+        const cellWidth = headerCell.getBoundingClientRect().width + 6;
+        
+        const stripCells = document.querySelectorAll('.strip-cell');
+        stripCells.forEach(c => {
+            c.style.width = `${cellWidth}px`;
+        });
+
+        updateTrackPosition();
+    }
+
+    function updateTrackPosition() {
+        const headerCell = document.getElementById('h-5');
+        if (!headerCell) return;
+        const cellWidth = headerCell.getBoundingClientRect().width + 6;
+
+        const baseLeftOffset = (5 * cellWidth) - (15 * cellWidth);
+        const finalX = baseLeftOffset + (currentShift * cellWidth);
+        stripTrack.style.transform = `translateX(${finalX}px)`;
+    }
+
+    // --- DRAG EVENTS ---
+    sliderWindow.addEventListener('mousedown', startDrag);
+    sliderWindow.addEventListener('touchstart', startDrag, { passive: true });
+    window.addEventListener('mousemove', doDrag);
+    window.addEventListener('touchmove', doDrag, { passive: false });
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+
+    function startDrag(e) {
+        let hasAnyInput = studentDigitsArray.some(val => val !== "");
+        if (!hasAnyInput) return;
+
+        isDragging = true;
+        startX = e.pageX || e.touches[0].pageX;
+    }
+
+    function doDrag(e) {
+        if (!isDragging) return;
+        const currentX = e.pageX || e.touches[0].pageX;
+        const diffX = currentX - startX;
+
+        if (diffX > dragThreshold) {
+            if (currentShift < 10) {
+                currentShift += 1;
+                startX = currentX;
+                renderAll();
+            }
+        } else if (diffX < -dragThreshold) {
+            if (currentShift > -10) {
+                currentShift -= 1;
+                startX = currentX;
+                renderAll();
+            }
+        }
+        if(e.cancelable) e.preventDefault();
+    }
+
+    function stopDrag() { isDragging = false; }
+
+    function resetAll() {
+        numberInput.value = "450000";
+        targetInputValue = "450000";
+        currentShift = 0;
+        studentDigitsArray.fill("");
+        renderAll();
+    }
+
+    renderAll();
+</script>
+
+</body>
+</html>
