@@ -62,17 +62,17 @@ body.exam-mode .az{display:block;}
   <p class="sub">Placer les chiffres, repérer le premier chiffre significatif, écrire en notation scientifique</p>
 </header>
 
-<div class="card"><div class="ch"><span>Niveau 1 : Grands nombres</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+<div class="card"><div class="ch"><span>Niveau 1 : Grands nombres (10² à 10⁵)</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
   <div class="ei"><div class="fb" id="n1a"></div><div class="sos">🆘 Place le nombre dans le tableau et repère le premier chiffre significatif.</div><div class="num-block" id="t1a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="1a" placeholder="a,… × 10ⁿ"><div class="cor" id="c1a"></div></div></div>
   <div class="ei"><div class="fb" id="n1b"></div><div class="sos">🆘 Place le nombre dans le tableau et repère le premier chiffre significatif.</div><div class="num-block" id="t1b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="1b" placeholder="a,… × 10ⁿ"><div class="cor" id="c1b"></div></div></div>
 </div></div></div>
 
-<div class="card"><div class="ch"><span>Niveau 2 : Grands nombres — exposant plus grand</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+<div class="card"><div class="ch"><span>Niveau 2 : Grands nombres (10³ à 10⁵)</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
   <div class="ei"><div class="fb" id="n2a"></div><div class="sos">🆘 Place le nombre dans le tableau et repère le premier chiffre significatif.</div><div class="num-block" id="t2a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="2a" placeholder="a,… × 10ⁿ"><div class="cor" id="c2a"></div></div></div>
   <div class="ei"><div class="fb" id="n2b"></div><div class="sos">🆘 Place le nombre dans le tableau et repère le premier chiffre significatif.</div><div class="num-block" id="t2b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="2b" placeholder="a,… × 10ⁿ"><div class="cor" id="c2b"></div></div></div>
 </div></div></div>
 
-<div class="card"><div class="ch"><span>Niveau 3 : Petits nombres (décimaux)</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+<div class="card"><div class="ch"><span>Niveau 3 : Petits nombres décimaux</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
   <div class="ei"><div class="fb" id="n3a"></div><div class="sos">🆘 Place le nombre dans le tableau et repère le premier chiffre significatif.</div><div class="num-block" id="t3a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="3a" placeholder="a,… × 10⁻ⁿ"><div class="cor" id="c3a"></div></div></div>
   <div class="ei"><div class="fb" id="n3b"></div><div class="sos">🆘 Place le nombre dans le tableau et repère le premier chiffre significatif.</div><div class="num-block" id="t3b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="3b" placeholder="a,… × 10⁻ⁿ"><div class="cor" id="c3b"></div></div></div>
 </div></div></div>
@@ -97,9 +97,11 @@ function sup(n){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴
 function sciStr(mant,exp){return mant+' × 10'+sup(exp);}
 function sciLatex(mant,exp){return mant.replace(',','.')+'\\times 10^{'+exp+'}';}
 
-const NAMES={9:'Milliards',8:'Cent. millions',7:'Dix. millions',6:'Millions',5:'Cent. milliers',4:'Dix. milliers',3:'Milliers',2:'Centaines',1:'Dizaines',0:'Unités','-1':'Dixièmes','-2':'Centièmes','-3':'Millièmes','-4':'Dix-millièmes','-5':'Cent-millièmes','-6':'Millionièmes'};
+const NAMES={5:'Cent. milliers',4:'Dix-milliers',3:'Milliers',2:'Centaines',1:'Dizaines',0:'Unités','-1':'Dixièmes','-2':'Centièmes','-3':'Millièmes','-4':'Dix-millièmes','-5':'Cent-millièmes'};
 
 function bigNum(emin,emax){
+  // emax plafonné à 5
+  emax=Math.min(emax,5);emin=Math.min(emin,emax);
   const exp=rnd(emin,emax),d0=rnd(1,9),nd=rnd(1,3);
   const dd=Array.from({length:nd},()=>rnd(0,9));
   while(dd.length>1&&dd[dd.length-1]===0)dd.pop();
@@ -110,6 +112,7 @@ function bigNum(emin,emax){
   let s='';for(let r=exp;r>=0;r--)s+=(digits[r]!==undefined?digits[r]:0);
   return {digits,mant,exp,str:s};
 }
+
 function smallNum(emin,emax){
   const exp=rnd(emin,emax),d0=rnd(1,9),nd=rnd(1,3);
   const dd=Array.from({length:nd},()=>rnd(0,9));
@@ -118,6 +121,8 @@ function smallNum(emin,emax){
   const digits={};digits[exp]=d0;
   dd.forEach((d,i)=>{digits[exp-1-i]=d;});
   for(let r=-1;r>exp;r--)if(digits[r]===undefined)digits[r]=0;
+  // Toujours inclure rang 0 pour les petits nombres
+  if(digits[0]===undefined) digits[0]=0;
   let s='0,';const minR=exp-nd;
   for(let r=-1;r>=minR;r--)s+=(digits[r]!==undefined?digits[r]:0);
   return {digits,mant,exp,str:s};
@@ -125,7 +130,10 @@ function smallNum(emin,emax){
 
 function getRangs(n){
   const keys=Object.keys(n.digits).map(Number);
-  const maxR=Math.max(...keys),minR=Math.min(...keys);
+  // Toujours inclure rang 0 (Unités) pour avoir la virgule comme référence
+  if(!keys.includes(0)) keys.push(0);
+  const maxR=Math.min(Math.max(...keys),5); // jamais > 10^5
+  const minR=Math.min(...keys);
   const pos=[],neg=[];
   for(let r=maxR;r>=0;r--)pos.push(r);
   for(let r=-1;r>=minR;r--)neg.push(r);
@@ -141,7 +149,7 @@ function buildTable(cid, digits, unitRang, pos, neg, qPrefix){
   const allCols=[...pos,...neg];
   const N=allCols.length;
 
-  // ── Ligne 1 : cases rang (puissance + nom) ──
+  // Ligne 1 : cases rang
   let rRow='<div style="white-space:nowrap;">';
   allCols.forEach((r,i)=>{
     const isFirst=i===0, isLast=i===N-1;
@@ -152,14 +160,13 @@ function buildTable(cid, digits, unitRang, pos, neg, qPrefix){
       <span style="display:block;font-size:15px;font-weight:bold;color:#1a4b8f;font-family:'Cambria Math','Times New Roman',serif;line-height:1.3;">${kts('10^{'+r+'}')}</span>
       <span style="display:block;font-size:9px;color:#667;margin-top:2px;line-height:1.3;">${NAMES[String(r)]||''}</span>
     </span>`;
-    // virgule entre rang 0 et rang -1
     if(r===0&&hasDec){
       rRow+=`<span style="display:inline-block;width:18px;min-width:18px;background:#ffffff;border-top:${BDR};border-bottom:${BDR};vertical-align:top;text-align:center;font-size:20px;font-weight:bold;color:#1a4b8f;padding-top:8px;">,</span>`;
     }
   });
   rRow+='</div>';
 
-  // ── Ligne 2 : inputs chiffres (cases blanches) ──
+  // Ligne 2 : inputs chiffres
   let dRow='<div style="white-space:nowrap;">';
   allCols.forEach((r,i)=>{
     const isFirst=i===0, isLast=i===N-1;
@@ -207,16 +214,21 @@ function gen(){
     document.querySelectorAll('.cor').forEach(c=>{c.classList.remove('vis');c.textContent='';});
     document.querySelectorAll('.cinp').forEach(i=>{i.value='';i.classList.remove('ok','ko');});
   }
-  setup('n1a','t1a','1a',bigNum(3,5));
-  setup('n1b','t1b','1b',bigNum(3,5));
-  setup('n2a','t2a','2a',bigNum(6,8));
-  setup('n2b','t2b','2b',bigNum(6,8));
-  setup('n3a','t3a','3a',smallNum(-5,-2));
-  setup('n3b','t3b','3b',smallNum(-5,-2));
-  setupSci('s4a','t4a','4a',bigNum(3,6));
-  setupSci('s4b','t4b','4b',smallNum(-5,-2));
-  function bilan(nid,tid,q){const big=Math.random()<0.5;const n=big?bigNum(2,8):smallNum(-6,-1);setup(nid,tid,q,n);}
-  bilan('n5a','t5a','5a');bilan('n5b','t5b','5b');
+  setup('n1a','t1a','1a',bigNum(2,4));
+  setup('n1b','t1b','1b',bigNum(2,4));
+  setup('n2a','t2a','2a',bigNum(3,5));
+  setup('n2b','t2b','2b',bigNum(3,5));
+  setup('n3a','t3a','3a',smallNum(-4,-1));
+  setup('n3b','t3b','3b',smallNum(-4,-1));
+  setupSci('s4a','t4a','4a',bigNum(2,5));
+  setupSci('s4b','t4b','4b',smallNum(-4,-1));
+  function bilan(nid,tid,q){
+    const big=Math.random()<0.5;
+    const n=big?bigNum(2,5):smallNum(-4,-1);
+    setup(nid,tid,q,n);
+  }
+  bilan('n5a','t5a','5a');
+  bilan('n5b','t5b','5b');
 }
 
 function toggleExam(){
