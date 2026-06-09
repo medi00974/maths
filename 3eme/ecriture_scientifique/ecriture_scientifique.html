@@ -1,0 +1,281 @@
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<style>
+:root{--primary:#1a4b8f;--pl:#e8eef8;--dark:#1a1a2e;--light:#f5f7fc;--border:#c0cce0;--warn:#b06000;}
+*{box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif;}
+body{background:var(--light);color:var(--dark);margin:0;padding:16px;}
+.wrap{max-width:980px;margin:0 auto;background:#fff;padding:24px;border-radius:8px;border:1px solid var(--border);}
+header{text-align:center;border-bottom:3px solid var(--primary);padding-bottom:12px;margin-bottom:20px;}
+h1{color:var(--primary);margin:0 0 4px;font-size:21px;}
+.sub{font-style:italic;color:#557;margin:0;font-size:13px;}
+.toolbar{background:#eef2fa;border:1px solid #b0c0dc;padding:10px 14px;border-radius:6px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+.bg{display:flex;gap:8px;}
+button{padding:9px 16px;border:none;border-radius:4px;cursor:pointer;font-weight:bold;font-size:13px;}
+.bd{background:var(--primary);color:#fff;}.bd:hover{background:#0f2f6a;}
+.bp{background:#2e7d32;color:#fff;}.bp:hover{background:#1b5e20;}
+.be{background:#7b1fa2;color:#fff;}.be:hover{background:#4a148c;}
+.be.active{background:#4a148c;box-shadow:inset 0 2px 4px rgba(0,0,0,.3);}
+#nb{display:none;align-items:center;justify-content:center;background:#4a148c;color:#fff;border-radius:8px;padding:6px 18px;font-size:22px;font-weight:bold;min-width:100px;}
+#nb.vis{display:flex;}
+.card{border:1px solid var(--border);border-radius:6px;margin-bottom:18px;overflow:hidden;}
+.ch{background:var(--primary);color:#fff;padding:8px 14px;font-weight:bold;font-size:13px;display:flex;justify-content:space-between;align-items:center;}
+.cpts{background:rgba(255,255,255,.25);border-radius:10px;padding:2px 9px;font-size:12px;font-weight:normal;display:none;}
+body.exam-mode .cpts{display:inline-block;}
+.cb{padding:14px;}
+.sos{color:var(--warn);font-weight:bold;font-size:12px;margin:8px 0 5px;text-transform:uppercase;}
+.grid{display:flex;gap:14px;flex-wrap:wrap;}
+.ei{flex:1;min-width:220px;border:1px solid #dde4f0;border-radius:4px;padding:12px;}
+.fb{background:var(--pl);border:1px solid var(--primary);border-left:5px solid var(--primary);border-radius:4px;padding:10px 14px;text-align:center;margin-bottom:10px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:bold;}
+
+/* ── Tableau numération ── */
+.ntw{overflow-x:auto;margin:8px 0;}
+
+/* On remet TOUT à blanc par défaut, puis on colorie uniquement les en-têtes */
+table.nt{border-collapse:collapse;font-size:12px;background:#ffffff;}
+table.nt *{background:#ffffff;color:#1a1a2e;}
+
+/* En-têtes classes (ligne 1) */
+table.nt th.tcl{background:#1a4b8f !important;color:#ffffff !important;font-weight:bold;font-size:10px;padding:2px 3px;border-bottom:3px solid #0a2060;height:28px;}
+table.nt th.tcl.dc{background:#7b2800 !important;color:#ffffff !important;}
+
+/* En-têtes C/D/U (ligne 2) */
+table.nt th.tco{background:#d0daf4 !important;color:#1a4b8f !important;font-weight:bold;font-size:10px;height:28px;}
+table.nt th.tco.dc{background:#fce8d0 !important;color:#8b3000 !important;}
+
+/* Toutes les cellules de données : blanc pur */
+table.nt td{background:#ffffff !important;color:#1a1a2e;border:2px solid #6080bb;text-align:center;padding:0;height:36px;min-width:36px;}
+
+/* Virgule */
+table.nt td.com{background:#ffffff !important;font-size:18px;font-weight:bold;color:#1a4b8f;width:16px;min-width:16px;}
+
+/* Séparateur de classe */
+table.nt .sep{border-left:3px solid #1a4b8f !important;}
+
+/* Libellé de ligne (étroite, sans bordure) */
+table.nt td.rlbl{border:none !important;background:transparent !important;font-size:9px;color:#888;writing-mode:vertical-rl;width:12px;min-width:12px;padding:0;}
+
+/* Inputs dans les cellules : fond transparent = blanc (héritage du td) */
+table.nt input.cinp{width:100%;height:34px;border:none;outline:none;text-align:center;font-size:16px;font-weight:bold;background:transparent;color:#1a1a2e;display:block;}
+table.nt input.cinp.ok{background:#e8f5e9 !important;color:#1b5e20;}
+table.nt input.cinp.ko{background:#ffebee !important;color:#b71c1c;}
+
+/* Case unités correcte (correction) */
+table.nt td.unit-ok{background:#c8e8ff !important;border:2px solid #1a4b8f !important;}
+
+/* Zone réponse */
+.az{display:none;margin-top:8px;border:2px dashed #9c27b0;border-radius:4px;padding:9px;background:#faf5ff;}
+.az label{font-size:12px;font-weight:bold;color:#7b1fa2;display:block;margin-bottom:4px;}
+.ai{width:100%;border:1px solid #ce93d8;border-radius:4px;padding:7px 10px;font-size:15px;background:#fff;color:var(--dark);outline:none;text-align:center;}
+.ai:focus{border-color:#7b1fa2;box-shadow:0 0 0 2px rgba(123,31,162,.15);}
+.ai.ok{background:#e8f5e9;border-color:#2e7d32;color:#1b5e20;}
+.ai.ko{background:#ffebee;border-color:#c62828;color:#b71c1c;}
+.cor{font-size:12px;margin-top:4px;display:none;}
+.cor.vis{display:block;}
+
+body.exam-mode .sos{display:none;}
+body.exam-mode .az{display:block;}
+
+@media print{
+  body{background:#fff;padding:0;}
+  .wrap{box-shadow:none;border:none;padding:0;max-width:100%;}
+  .toolbar{display:none!important;}
+  .card{border:1px solid #000;page-break-inside:avoid;margin-bottom:14px;}
+  .ch{background:#1a4b8f!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  table.nt th.tcl{background:#1a4b8f!important;color:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  table.nt th.tcl.dc{background:#7b2800!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  table.nt th.tco{background:#d0daf4!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  table.nt th.tco.dc{background:#fce8d0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+</style>
+
+<div class="wrap">
+<div class="toolbar">
+  <div><strong style="color:var(--primary)">Écriture Scientifique</strong><span style="font-size:12px;color:#556;display:block">Tableau de numération → notation scientifique</span></div>
+  <div class="bg">
+    <button class="bd" onclick="gen()">🎲 Nouveaux nombres</button>
+    <button class="be" id="btnE" onclick="toggleExam()">📝 Mode examen /20</button>
+    <button class="bp" onclick="window.print()">🖨️ Imprimer</button>
+  </div>
+  <div id="nb">— /20</div>
+</div>
+<header>
+  <h1>Écriture Scientifique &amp; Tableau de Numération</h1>
+  <p class="sub">Placer les chiffres, repérer la colonne unités, écrire en notation scientifique</p>
+</header>
+
+<div class="card"><div class="ch"><span>Niveau 1 : Grands nombres — écriture scientifique</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+  <div class="ei"><div class="fb" id="n1a"></div><div class="sos">🆘 Écris chaque chiffre dans sa colonne, puis marque d'un U la colonne unités :</div><div class="ntw" id="t1a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="1a" placeholder="a,… × 10ⁿ"><div class="cor" id="c1a"></div></div></div>
+  <div class="ei"><div class="fb" id="n1b"></div><div class="sos">🆘 Écris chaque chiffre dans sa colonne, puis marque d'un U la colonne unités :</div><div class="ntw" id="t1b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="1b" placeholder="a,… × 10ⁿ"><div class="cor" id="c1b"></div></div></div>
+</div></div></div>
+
+<div class="card"><div class="ch"><span>Niveau 2 : Grands nombres — exposant plus grand</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+  <div class="ei"><div class="fb" id="n2a"></div><div class="sos">🆘 Écris chaque chiffre dans sa colonne, puis marque d'un U la colonne unités :</div><div class="ntw" id="t2a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="2a" placeholder="a,… × 10ⁿ"><div class="cor" id="c2a"></div></div></div>
+  <div class="ei"><div class="fb" id="n2b"></div><div class="sos">🆘 Écris chaque chiffre dans sa colonne, puis marque d'un U la colonne unités :</div><div class="ntw" id="t2b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="2b" placeholder="a,… × 10ⁿ"><div class="cor" id="c2b"></div></div></div>
+</div></div></div>
+
+<div class="card"><div class="ch"><span>Niveau 3 : Petits nombres (décimaux)</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+  <div class="ei"><div class="fb" id="n3a"></div><div class="sos">🆘 Écris chaque chiffre dans sa colonne, puis marque d'un U la colonne unités :</div><div class="ntw" id="t3a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="3a" placeholder="a,… × 10⁻ⁿ"><div class="cor" id="c3a"></div></div></div>
+  <div class="ei"><div class="fb" id="n3b"></div><div class="sos">🆘 Écris chaque chiffre dans sa colonne, puis marque d'un U la colonne unités :</div><div class="ntw" id="t3b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="3b" placeholder="a,… × 10⁻ⁿ"><div class="cor" id="c3b"></div></div></div>
+</div></div></div>
+
+<div class="card"><div class="ch"><span>Niveau 4 : De l'écriture scientifique au nombre décimal</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+  <div class="ei"><div class="fb" id="s4a"></div><div class="sos">🆘 Place les chiffres dans le tableau à partir de la colonne unités :</div><div class="ntw" id="t4a"></div><div class="az"><label>Écriture décimale :</label><input class="ai" type="text" data-q="4a" placeholder="nombre décimal"><div class="cor" id="c4a"></div></div></div>
+  <div class="ei"><div class="fb" id="s4b"></div><div class="sos">🆘 Place les chiffres dans le tableau à partir de la colonne unités :</div><div class="ntw" id="t4b"></div><div class="az"><label>Écriture décimale :</label><input class="ai" type="text" data-q="4b" placeholder="nombre décimal"><div class="cor" id="c4b"></div></div></div>
+</div></div></div>
+
+<div class="card"><div class="ch"><span>Niveau 5 : Exercices bilan</span><span class="cpts">4 pts</span></div><div class="cb"><div class="grid">
+  <div class="ei"><div class="fb" id="n5a"></div><div class="ntw" id="t5a"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="5a" placeholder="a,… × 10ⁿ"><div class="cor" id="c5a"></div></div></div>
+  <div class="ei"><div class="fb" id="n5b"></div><div class="ntw" id="t5b"></div><div class="az"><label>Écriture scientifique :</label><input class="ai" type="text" data-q="5b" placeholder="a,… × 10ⁿ"><div class="cor" id="c5b"></div></div></div>
+</div></div></div>
+</div>
+
+<script>
+function wk(cb,t=0){typeof katex!=='undefined'?cb():t<60?setTimeout(()=>wk(cb,t+1),100):null;}
+function kts(l){try{return katex.renderToString(l,{throwOnError:false,displayMode:false});}catch(e){return l;}}
+const ANS={};let examMode=false;
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function sup(n){const m={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return String(n).split('').map(c=>m[c]||c).join('');}
+function sciStr(mant,exp){return mant+' × 10'+sup(exp);}
+function sciLatex(mant,exp){return mant.replace(',','.')+'\\times 10^{'+exp+'}';}
+
+function bigNum(emin,emax){
+  const exp=rnd(emin,emax),d0=rnd(1,9),nd=rnd(1,3);
+  const dd=Array.from({length:nd},()=>rnd(0,9));
+  while(dd.length>1&&dd[dd.length-1]===0)dd.pop();
+  const mant=d0+(dd.length?','+dd.join(''):'');
+  const digits={};digits[exp]=d0;
+  dd.forEach((d,i)=>{digits[exp-1-i]=d;});
+  for(let r=exp-nd-1;r>=0;r--)if(digits[r]===undefined)digits[r]=0;
+  let s='';for(let r=exp;r>=0;r--)s+=(digits[r]!==undefined?digits[r]:0);
+  return {digits,mant,exp,str:s};
+}
+function smallNum(emin,emax){
+  const exp=rnd(emin,emax),d0=rnd(1,9),nd=rnd(1,3);
+  const dd=Array.from({length:nd},()=>rnd(0,9));
+  while(dd.length>1&&dd[dd.length-1]===0)dd.pop();
+  const mant=d0+(dd.length?','+dd.join(''):'');
+  const digits={};digits[exp]=d0;
+  dd.forEach((d,i)=>{digits[exp-1-i]=d;});
+  for(let r=-1;r>exp;r--)if(digits[r]===undefined)digits[r]=0;
+  let s='0,';const minR=exp-nd;
+  for(let r=-1;r>=minR;r--)s+=(digits[r]!==undefined?digits[r]:0);
+  return {digits,mant,exp,str:s};
+}
+
+const POS=[{name:'Milliards',rangs:[11,10,9]},{name:'Millions',rangs:[8,7,6]},{name:'Milliers',rangs:[5,4,3]},{name:'Unités',rangs:[2,1,0]}];
+const NEG=[{name:'Dix.',rang:-1},{name:'Cent.',rang:-2},{name:'Mill.',rang:-3},{name:'D-mill.',rang:-4},{name:'C-mill.',rang:-5},{name:'Mill-ièmes',rang:-6}];
+
+function buildTable(cid,digits,unitRang,maxR,minR,qPrefix){
+  const el=document.getElementById(cid);if(!el)return;
+  const posC=POS.filter(c=>c.rangs.some(r=>r<=maxR&&r>=0));
+  const negC=NEG.filter(c=>c.rang>=minR&&c.rang<0);
+  const hasDec=minR<0;
+  let cols=[];
+  posC.forEach((cl,ci)=>{cl.rangs.forEach((r,ri)=>{cols.push({rang:r,sub:['C','D','U'][ri],isFirst:ri===0,ci,isDec:false});});});
+  if(hasDec) negC.forEach(c=>{cols.push({rang:c.rang,sub:c.name,isFirst:false,ci:-1,isDec:true});});
+
+  // Cellule td toujours blanche via style inline pour écraser tout héritage
+  const WHITE='style="background:#ffffff !important;"';
+  const SEP='style="background:#ffffff !important; border-left:3px solid #1a4b8f !important;"';
+
+  let h='<table class="nt">';
+
+  // Ligne 1 : noms classes
+  h+='<tr><td class="rlbl" style="border:none;background:transparent!important;"></td>';
+  posC.forEach((cl,ci)=>{h+=`<th colspan="3" class="tcl${ci>0?' sep':''}">${cl.name}</th>`;});
+  if(hasDec){
+    h+=`<td class="com" rowspan="4" style="background:#ffffff!important;font-size:18px;font-weight:bold;color:#1a4b8f;width:16px;border:2px solid #6080bb;">,</td>`;
+    h+=`<th colspan="${negC.length}" class="tcl dc">Partie décimale</th>`;
+  }
+  h+='</tr>';
+
+  // Ligne 2 : C D U
+  h+='<tr><td class="rlbl" style="border:none;background:transparent!important;"></td>';
+  posC.forEach((cl,ci)=>{h+=`<th class="tco${ci>0?' sep':''}">C</th><th class="tco">D</th><th class="tco">U</th>`;});
+  if(hasDec) negC.forEach(c=>{h+=`<th class="tco dc" style="font-size:9px;">${c.name}</th>`;});
+  h+='</tr>';
+
+  // Ligne 3 : chiffres (cases blanches avec input)
+  h+=`<tr><td class="rlbl" style="border:none;background:transparent!important;font-size:9px;color:#888;">nombre</td>`;
+  cols.forEach(col=>{
+    const s=col.isFirst&&col.ci>0?SEP:WHITE;
+    const q=qPrefix+'_dig_'+col.rang;
+    const val=digits[col.rang];
+    ANS[q]=(val!==undefined&&val!==null)?String(val):'';
+    h+=`<td ${s} style="background:#ffffff!important;border:2px solid #6080bb;${col.isFirst&&col.ci>0?'border-left:3px solid #1a4b8f!important;':''}height:36px;min-width:36px;"><input class="cinp" type="text" data-q="${q}" maxlength="1" style="background:#ffffff;"></td>`;
+  });
+  h+='</tr>';
+
+  // Ligne 4 : colonne unités (cases blanches avec input)
+  h+=`<tr><td class="rlbl" style="border:none;background:transparent!important;font-size:9px;color:#888;">unités</td>`;
+  cols.forEach(col=>{
+    const q=qPrefix+'_unit_'+col.rang;
+    const isHere=(col.rang===unitRang);
+    ANS[q]=isHere?'u':'';
+    h+=`<td style="background:#ffffff!important;border:2px solid #6080bb;${col.isFirst&&col.ci>0?'border-left:3px solid #1a4b8f!important;':''}height:36px;min-width:36px;"><input class="cinp" type="text" data-q="${q}" maxlength="1" style="background:#ffffff;font-size:13px;"></td>`;
+  });
+  h+='</tr>';
+
+  h+='</table>';
+  el.innerHTML=h;
+}
+
+function norm(s){return s.trim().replace(/\s/g,'').replace(/[×xX\*]/g,'*').replace(',','.').toLowerCase();}
+function checkSci(q,raw){
+  const c=ANS[q];if(!c)return null;
+  if(norm(raw)===norm(c))return true;
+  try{const pv=s=>{const m=s.match(/([\d.]+)\*10\^?\{?(-?\d+)\}?/);return m?parseFloat(m[1])*Math.pow(10,parseInt(m[2])):NaN;};const nr=pv(norm(raw)),nc=pv(norm(c));if(!isNaN(nr)&&!isNaN(nc)&&Math.abs(nr-nc)<1e-10)return true;}catch(e){}
+  return false;
+}
+
+function gen(){
+  if(!examMode){
+    document.getElementById('nb').classList.remove('vis');
+    document.querySelectorAll('.ai').forEach(i=>{i.value='';i.classList.remove('ok','ko');});
+    document.querySelectorAll('.cor').forEach(c=>{c.classList.remove('vis');c.textContent='';});
+  }
+  const n1a=bigNum(3,5);document.getElementById('n1a').textContent=n1a.str;buildTable('t1a',n1a.digits,n1a.exp,n1a.exp,0,'1a');ANS['1a']=sciStr(n1a.mant,n1a.exp);
+  const n1b=bigNum(3,5);document.getElementById('n1b').textContent=n1b.str;buildTable('t1b',n1b.digits,n1b.exp,n1b.exp,0,'1b');ANS['1b']=sciStr(n1b.mant,n1b.exp);
+  const n2a=bigNum(6,8);document.getElementById('n2a').textContent=n2a.str;buildTable('t2a',n2a.digits,n2a.exp,n2a.exp,0,'2a');ANS['2a']=sciStr(n2a.mant,n2a.exp);
+  const n2b=bigNum(6,8);document.getElementById('n2b').textContent=n2b.str;buildTable('t2b',n2b.digits,n2b.exp,n2b.exp,0,'2b');ANS['2b']=sciStr(n2b.mant,n2b.exp);
+  const n3a=smallNum(-5,-2);document.getElementById('n3a').textContent=n3a.str;buildTable('t3a',n3a.digits,n3a.exp,0,n3a.exp-1,'3a');ANS['3a']=sciStr(n3a.mant,n3a.exp);
+  const n3b=smallNum(-5,-2);document.getElementById('n3b').textContent=n3b.str;buildTable('t3b',n3b.digits,n3b.exp,0,n3b.exp-1,'3b');ANS['3b']=sciStr(n3b.mant,n3b.exp);
+  const n4a=bigNum(3,6);document.getElementById('s4a').innerHTML=kts(sciLatex(n4a.mant,n4a.exp));buildTable('t4a',n4a.digits,n4a.exp,n4a.exp,0,'4a');ANS['4a']=n4a.str;
+  const n4b=smallNum(-5,-2);document.getElementById('s4b').innerHTML=kts(sciLatex(n4b.mant,n4b.exp));buildTable('t4b',n4b.digits,n4b.exp,0,n4b.exp-1,'4b');ANS['4b']=n4b.str;
+  function bilan(nid,tid,q){const big=Math.random()<0.5;const n=big?bigNum(2,9):smallNum(-6,-1);document.getElementById(nid).textContent=n.str;buildTable(tid,n.digits,n.exp,n.exp>0?n.exp:0,n.exp<0?n.exp-1:0,q);ANS[q]=sciStr(n.mant,n.exp);}
+  bilan('n5a','t5a','5a');bilan('n5b','t5b','5b');
+}
+
+function toggleExam(){
+  examMode=!examMode;
+  document.body.classList.toggle('exam-mode',examMode);
+  document.getElementById('btnE').classList.toggle('active',examMode);
+  const badge=document.getElementById('nb');
+  if(!examMode){
+    let score=0;
+    document.querySelectorAll('.cinp').forEach(inp=>{
+      const q=inp.dataset.q;if(!q)return;
+      const expected=ANS[q];if(expected===''||expected===undefined){inp.classList.remove('ok','ko');return;}
+      const v=inp.value.trim().toLowerCase();
+      const ok=q.includes('_unit_')?((v==='u'||v==='x')&&expected==='u'):(v===expected);
+      inp.classList.toggle('ok',ok);inp.classList.toggle('ko',!ok&&expected!=='');
+    });
+    document.querySelectorAll('.ai').forEach(inp=>{
+      const q=inp.dataset.q;if(!q)return;
+      const ok=checkSci(q,inp.value);
+      inp.classList.toggle('ok',!!ok);inp.classList.toggle('ko',!ok);
+      const cor=document.getElementById('c'+q);
+      if(cor){cor.innerHTML=ok?'<span style="color:#2e7d32">✓ Correct !</span>':'<span style="color:#c62828">✗ Attendu : '+ANS[q]+'</span>';cor.classList.add('vis');}
+      if(ok)score+=2;
+    });
+    badge.textContent=score+' / 20';badge.classList.add('vis');
+  } else {
+    badge.classList.remove('vis');
+    document.querySelectorAll('.ai').forEach(i=>{i.value='';i.classList.remove('ok','ko');});
+    document.querySelectorAll('.cinp').forEach(i=>{i.value='';i.classList.remove('ok','ko');});
+    document.querySelectorAll('.cor').forEach(c=>{c.classList.remove('vis');c.textContent='';});
+  }
+}
+window.onload=()=>wk(gen);
+</script>
