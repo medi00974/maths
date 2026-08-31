@@ -14,8 +14,8 @@
         :root { --primary: #2c3e50; --accent: #e67e22; --success: #27ae60; --danger: #e74c3c; --light: #ecf0f1; --blue: #3498db; --purple: #8e44ad; }
         body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 1000px; width: 100%; text-align: center; }
-        .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .mode-btn { padding: 10px 20px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
+        .mode-selector { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .mode-btn { padding: 10px 16px; border: 2px solid var(--primary); background: white; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.2s; }
         .mode-btn.active { background: var(--primary); color: white; }
         .mode-btn.btn-exam-mode { border-color: var(--purple); color: var(--purple); }
         .mode-btn.btn-exam-mode.active { background: var(--purple); color: white; }
@@ -39,12 +39,53 @@
         .user-input { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; width: 100px; text-align: center; font-weight: bold; }
         .feedback { font-weight: bold; margin-left: 10px; font-size: 1.2rem; }
         .enonce { font-size: 1rem; line-height: 1.5; margin-bottom: 10px; border-left: 4px solid var(--blue); padding-left: 10px; }
-        .solution { display: none; margin-top: 15px; padding: 15px; background: #f0fff4; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
+        .solution { display: none; margin-top: 15px; padding: 15px; background: #fdfefe; border-radius: 8px; border: 1px solid var(--success); font-size: 0.95rem; line-height: 1.6; }
         #score-final { display: none; margin: 20px; padding: 20px; background: var(--purple); color: white; border-radius: 10px; font-size: 1.6rem; font-weight: bold; }
         .triangle-path { fill: rgba(52, 152, 219, 0.05); stroke: var(--primary); stroke-width: 2.5; }
         .right-angle { fill: none; stroke: var(--danger); stroke-width: 2; }
         .label-point { font-weight: bold; font-size: 18px; fill: var(--primary); font-family: serif; }
         .measure-text { fill: #d35400; font-size: 16px; font-weight: bold; }
+
+        /* CSS pour les corrections en schéma en barres */
+        .sol-container { font-family: 'Segoe UI', sans-serif; font-size: 0.95rem; color: #2c3e50; }
+        .sol-header { color: #e74c3c; font-weight: bold; font-style: italic; margin-bottom: 12px; }
+        .sol-grid { display: grid; grid-template-columns: auto 1fr; gap: 10px 20px; align-items: center; margin-bottom: 15px; }
+        .sol-step { display: flex; align-items: center; gap: 8px; }
+        .step-badge {
+            background: #27ae60;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 10px 0 0 10px;
+            min-width: 18px;
+            text-align: center;
+            border: 1px solid #1e8449;
+        }
+        .bar-box {
+            display: flex;
+            flex-direction: column;
+            width: 140px;
+            border: 2px solid #2c3e50;
+            font-size: 0.85rem;
+            font-weight: bold;
+            text-align: center;
+            background: #fff;
+        }
+        .bar-row { display: flex; width: 100%; }
+        .bar-cell { padding: 3px 2px; flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .bar-green { background: #9ccc65; border-bottom: 1.5px solid #2c3e50; }
+        .bar-orange { background: #ffb74d; border-right: 1.5px solid #2c3e50; }
+        .bar-orange:last-child { border-right: none; }
+        .bar-white { background: #ffffff; border-right: 1.5px solid #2c3e50; }
+        .bar-white:last-child { border-right: none; }
+        .bar-dotted {
+            background: #ffe0b2;
+            border: 1.5px dashed #e67e22;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(230,126,34,0.1) 3px, rgba(230,126,34,0.1) 6px);
+        }
+        .sol-conclusion { color: #e74c3c; font-weight: bold; margin: 6px 0; font-size: 1rem; }
+
         @media print {
             body { background: white; padding: 0; }
             .mode-selector, .opt-container, .controls, .answer-zone, #score-final, #nom-eleve-container { display: none !important; }
@@ -61,7 +102,9 @@
         <button class="mode-btn active" onclick="setMode('theoreme', this)">Théorème</button>
         <button class="mode-btn" onclick="setMode('reciproque', this)">Réciproque</button>
         <button class="mode-btn" onclick="setMode('mixte', this)">Mixte</button>
-        <button class="mode-btn btn-exam-mode" onclick="setMode('examen', this)">🎓 Examen</button>
+        <button class="mode-btn btn-exam-mode" onclick="setMode('examen_theoreme', this)">🎓 Exam Théorème</button>
+        <button class="mode-btn btn-exam-mode" onclick="setMode('examen_reciproque', this)">🎓 Exam Réciproque</button>
+        <button class="mode-btn btn-exam-mode" onclick="setMode('examen_mixte', this)">🎓 Exam Mixte</button>
     </div>
 
     <div id="nom-eleve-container">
@@ -110,15 +153,19 @@ let answersMap = {};
 let isExam = false;
 
 function setMode(m, btn) {
-    isExam = (m === 'examen');
-    currentMode = isExam ? 'mixte' : m;
+    currentMode = m;
+    isExam = m.startsWith('examen');
+    
     document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    
     document.getElementById('nom-eleve-container').style.display = isExam ? 'block' : 'none';
-    document.getElementById('theoreme-sub-opts').style.display = (m === 'reciproque' || isExam) ? 'none' : 'block';
+    document.getElementById('theoreme-sub-opts').style.display = (currentMode === 'theoreme') ? 'block' : 'none';
+    
     document.getElementById('btn-finish-exam').style.display = isExam ? 'inline-block' : 'none';
     document.getElementById('btn-generate').style.display = isExam ? 'none' : 'inline-block';
     document.getElementById('btn-toggle-sol').style.display = isExam ? 'none' : 'inline-block';
+    
     if(isExam) document.getElementById('exoQty').value = "6";
     generateSheet();
 }
@@ -141,21 +188,38 @@ function generateSheet() {
     wrapper.innerHTML = '';
     wrapper.className = (qty === 1) ? 'print-cols cols-1' : 'print-cols cols-2';
     answersMap = {};
+
     for (let i = 0; i < qty; i++) {
         const exoDiv = document.createElement('div');
         exoDiv.className = 'exo-block';
         let type;
-        if (isExam) {
-            if(i < 2) type = 'hypo'; else if(i < 4) type = 'cote'; else type = 'recip';
+
+        // DÉTERMINATION DU TYPE D'EXERCICE
+        if (currentMode === 'examen_theoreme') {
+            type = (i % 2 === 0) ? 'hypo' : 'cote';
+        } else if (currentMode === 'examen_reciproque') {
+            type = 'recip';
+        } else if (currentMode === 'examen_mixte' || currentMode === 'examen') {
+            type = (i < 3) ? ((i % 2 === 0) ? 'hypo' : 'cote') : 'recip';
         } else if (currentMode === 'theoreme') {
             const sel = document.getElementById('calcType').value;
             type = (sel === 'aleatoire') ? (Math.random() > 0.5 ? 'hypo' : 'cote') : sel;
         } else if (currentMode === 'reciproque') {
             type = 'recip';
-        } else {
-            const choice = Math.random();
-            type = (choice < 0.33) ? 'hypo' : (choice < 0.66 ? 'cote' : 'recip');
+        } else if (currentMode === 'mixte') {
+            // Egalité stricte 50/50 Théorème / Réciproque
+            if (qty === 1) {
+                type = (Math.random() < 0.5) ? (Math.random() < 0.5 ? 'hypo' : 'cote') : 'recip';
+            } else {
+                let half = Math.floor(qty / 2);
+                if (i < half) {
+                    type = (i % 2 === 0) ? 'hypo' : 'cote';
+                } else {
+                    type = 'recip';
+                }
+            }
         }
+
         exoDiv.innerHTML = `
             <div class="svg-wrap"><svg id="svg-${i}" width="320" height="220" viewBox="0 0 400 300"></svg></div>
             <div id="enonce-${i}" class="enonce"></div>
@@ -178,28 +242,203 @@ function setupExo(id, type) {
     const svg = document.getElementById('svg-'+id);
     let a = Math.floor(Math.random() * 5) + 3; 
     let b = Math.floor(Math.random() * 5) + 3;
+
     if (type === 'hypo') {
-        let hyp = Math.sqrt(a*a + b*b).toFixed(1);
-        answersMap[id] = { val: hyp, type: 'calcul' };
+        let hypSq = a*a + b*b;
+        let hypVal = Math.sqrt(hypSq);
+        let hypStr = Number.isInteger(hypVal) ? hypVal : hypVal.toFixed(1);
+        answersMap[id] = { val: hypStr, type: 'calcul' };
+
         document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. On donne $${L[0]}${L[1]} = ${a}$ cm et $${L[0]}${L[2]} = ${b}$ cm. <b>Calcule $${L[1]}${L[2]}$</b>.`;
-        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, $${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a+b*b}$. Donc $${L[1]}${L[2]} \\approx$ <b>${hyp} cm</b>`;
+        document.getElementById('sol-'+id).innerHTML = buildBarModelHypo(L, a, b, hypSq, hypStr, hypVal);
         drawTriangle(svg, rot, a, b, "?", L);
+
     } else if (type === 'cote') {
-        let hyp = Math.max(a, b) + 3;
-        let coteM = Math.sqrt(hyp*hyp - a*a).toFixed(1);
-        answersMap[id] = { val: coteM, type: 'calcul' };
+        let hyp = Math.max(a, b) + Math.floor(Math.random() * 3) + 3;
+        let hypSq = hyp * hyp;
+        let aSq = a * a;
+        let diffSq = hypSq - aSq;
+        let coteVal = Math.sqrt(diffSq);
+        let coteStr = Number.isInteger(coteVal) ? coteVal : coteVal.toFixed(1);
+        answersMap[id] = { val: coteStr, type: 'calcul' };
+
         document.getElementById('enonce-'+id).innerHTML = `Le triangle $${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$. $${L[1]}${L[2]} = ${hyp}$ cm et $${L[0]}${L[1]} = ${a}$ cm. <b>Calcule $${L[0]}${L[2]}$</b>.`;
-        document.getElementById('sol-'+id).innerHTML = `Dans le triangle $${L[0]}${L[1]}${L[2]}$ rectangle en $${L[0]}$, $${L[0]}${L[2]}^2 = ${hyp}^2 - ${a}^2 = ${hyp*hyp-a*a}$. Donc $${L[0]}${L[2]} \\approx$ <b>${coteM} cm</b>`;
+        document.getElementById('sol-'+id).innerHTML = buildBarModelCote(L, a, hyp, hypSq, aSq, diffSq, coteStr, coteVal);
         drawTriangle(svg, rot, a, "?", hyp, L);
+
     } else {
         const isRight = Math.random() > 0.5;
         let hyp = isRight ? Math.sqrt(a*a + b*b) : (Math.sqrt(a*a + b*b) + 1.2);
         hyp = parseFloat(hyp.toFixed(1));
         answersMap[id] = { val: isRight ? "oui" : "non", type: 'recip' };
+
         document.getElementById('enonce-'+id).innerHTML = `$${L[0]}${L[1]} = ${a}$, $${L[0]}${L[2]} = ${b}$, $${L[1]}${L[2]} = ${hyp}$. <b>Est-il rectangle ?</b>`;
-        document.getElementById('sol-'+id).innerHTML = `$${hyp}^2 = ${(hyp*hyp).toFixed(1)}$ et $${a}^2 + ${b}^2 = ${a*a+b*b}$. ${isRight ? "Égal : <b>Rectangle</b>." : "Pas égal : <b>Non</b>."}`;
+        document.getElementById('sol-'+id).innerHTML = buildDetailedRecip(L, a, b, hyp, isRight);
         drawTriangle(svg, rot, a, b, hyp, L, false);
     }
+}
+
+/* --- CORRECTION SCHÉMA EN BARRES : HYPOTÉNUSE --- */
+function buildBarModelHypo(L, a, b, hypSq, hypStr, hypVal) {
+    const isExact = Number.isInteger(hypVal);
+    const symbolApprox = isExact ? "=" : "\\approx";
+
+    return `
+    <div class="sol-container">
+        <div class="sol-header">• Le triangle ${L[0]}${L[1]}${L[2]} est rectangle en ${L[0]} donc d'après le théorème de Pythagore,</div>
+        
+        <div class="sol-grid">
+            <div class="sol-step">
+                <span class="step-badge">01</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green">${L[1]}${L[2]}²</div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-orange">${L[0]}${L[1]}²</div>
+                        <div class="bar-cell bar-orange">${L[0]}${L[2]}²</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$</div>
+
+            <div class="sol-step">
+                <span class="step-badge">02</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green">${L[1]}${L[2]}²</div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-orange">${a}²</div>
+                        <div class="bar-cell bar-orange">${b}²</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[1]}${L[2]}^2 = ${a}^2 + ${b}^2$</div>
+
+            <div class="sol-step">
+                <span class="step-badge">03</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green">${L[1]}${L[2]}²</div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-orange">${a*a}</div>
+                        <div class="bar-cell bar-orange">${b*b}</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[1]}${L[2]}^2 = ${a*a} + ${b*b}$</div>
+
+            <div class="sol-step">
+                <span class="step-badge">04</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green">${L[1]}${L[2]}²</div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-orange" style="width:100%">${hypSq}</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[1]}${L[2]}^2 = ${hypSq}$</div>
+        </div>
+
+        <div class="sol-conclusion">• Donc, &nbsp;&nbsp;&nbsp;&nbsp; $${L[1]}${L[2]} = \\sqrt{${hypSq}}$</div>
+        <div class="sol-conclusion">📱 • Alors: &nbsp;&nbsp;&nbsp;&nbsp; $${L[1]}${L[2]} ${symbolApprox} ${hypStr}\\text{ cm}$</div>
+    </div>
+    `;
+}
+
+/* --- CORRECTION SCHÉMA EN BARRES : CÔTÉ ANGLE DROIT --- */
+function buildBarModelCote(L, a, hyp, hypSq, aSq, diffSq, coteStr, coteVal) {
+    const isExact = Number.isInteger(coteVal);
+    const symbolApprox = isExact ? "=" : "\\approx";
+
+    return `
+    <div class="sol-container">
+        <div class="sol-header">• Le triangle ${L[0]}${L[1]}${L[2]} est rectangle en ${L[0]} donc d'après le théorème de Pythagore,</div>
+        
+        <div class="sol-grid">
+            <div class="sol-step">
+                <span class="step-badge">01</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green">${L[1]}${L[2]}²</div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-white">${L[0]}${L[2]}²</div>
+                        <div class="bar-cell bar-white">${L[0]}${L[1]}²</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[1]}${L[2]}^2 = ${L[0]}${L[2]}^2 + ${L[0]}${L[1]}^2$</div>
+
+            <div class="sol-step">
+                <span class="step-badge">02</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green">${hyp}²</div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-white" style="color:var(--danger)">${L[0]}${L[2]}²</div>
+                        <div class="bar-cell bar-white">${a}²</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${hyp}^2 = ${L[0]}${L[2]}^2 + ${a}^2$</div>
+
+            <div class="sol-step">
+                <span class="step-badge">03</span>
+                <div class="bar-box">
+                    <div class="bar-row">
+                        <div class="bar-cell bar-green" style="flex:1.2; border-right:1.5px solid #2c3e50;">${hyp}² - ${a}²</div>
+                        <div class="bar-cell bar-dotted" style="flex:0.8;">${a}²</div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-cell bar-white" style="flex:1.2; color:var(--danger); border-right:1.5px solid #2c3e50;">${L[0]}${L[2]}²</div>
+                        <div class="bar-cell bar-dotted" style="flex:0.8;">${a}²</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[0]}${L[2]}^2 = ${hyp}^2 - ${a}^2$</div>
+
+            <div class="sol-step">
+                <span class="step-badge">04</span>
+                <div class="bar-box">
+                    <div class="bar-row bar-green" style="border-bottom:none;">${diffSq}</div>
+                    <div class="bar-row" style="border-top:1.5px solid #2c3e50;">
+                        <div class="bar-cell bar-white" style="color:var(--danger);">${L[0]}${L[2]}²</div>
+                    </div>
+                </div>
+            </div>
+            <div>$${L[0]}${L[2]}^2 = ${diffSq}$</div>
+        </div>
+
+        <div class="sol-conclusion">• Donc, &nbsp;&nbsp;&nbsp;&nbsp; $${L[0]}${L[2]} = \\sqrt{${diffSq}}$</div>
+        <div class="sol-conclusion">📱 • Alors: &nbsp;&nbsp;&nbsp;&nbsp; $${L[0]}${L[2]} ${symbolApprox} ${coteStr}\\text{ cm}$</div>
+    </div>
+    `;
+}
+
+/* --- CORRECTION DÉTAILLÉE LATEX : RÉCIPROQUE --- */
+function buildDetailedRecip(L, a, b, hyp, isRight) {
+    const hypSq = parseFloat((hyp * hyp).toFixed(2));
+    const sumSq = a*a + b*b;
+
+    return `
+    <div style="font-family: 'Segoe UI', sans-serif; color: #2c3e50; line-height: 1.6;">
+        <p>Dans le triangle $${L[0]}${L[1]}${L[2]}$, le plus grand côté est $[${L[1]}${L[2]}]$.</p>
+        
+        <p><b>1) D'une part, calcul du carré du plus grand côté :</b><br>
+        $${L[1]}${L[2]}^2 = ${hyp}^2 = ${hypSq}$
+        </p>
+
+        <p><b>2) D'autre part, calcul de la somme des carrés des deux autres côtés :</b><br>
+        $${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2 = ${a}^2 + ${b}^2 = ${a*a} + ${b*b} = ${sumSq}$
+        </p>
+
+        <p><b>3) Comparaison et conclusion :</b><br>
+        ${isRight ? 
+            `On constate que $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$ (car $${hypSq} = ${sumSq}$).<br>
+            L'égalité de Pythagore $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$ est vérifiée.<br>
+            D'après la <b>réciproque du théorème de Pythagore</b>, le triangle <b>$${L[0]}${L[1]}${L[2]}$ est rectangle en $${L[0]}$</b>.`
+            :
+            `On constate que $${L[1]}${L[2]}^2 \\neq ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$ (car $${hypSq} \\neq ${sumSq}$).<br>
+            L'égalité de Pythagore $${L[1]}${L[2]}^2 = ${L[0]}${L[1]}^2 + ${L[0]}${L[2]}^2$ n'est pas vérifiée.<br>
+            Donc le triangle <b>$${L[0]}${L[1]}${L[2]}$ n'est pas rectangle</b>.`
+        }
+        </p>
+    </div>
+    `;
 }
 
 function checkAnswer(id, silent = false) {
@@ -233,7 +472,7 @@ function finishExam() {
     toggleSolutions();
     document.getElementById('btn-finish-exam').style.display = 'none';
 
-    // ENVOI SÉCURISÉ
+    // ENVOI SÉCURISÉ GOOGLE SHEETS
     if(WEB_APP_URL.includes("google.com")) {
         fetch(WEB_APP_URL, {
             method: 'POST',
@@ -242,7 +481,7 @@ function finishExam() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ nom: nom, classe: classe, note: score, details: details || "Parfait" })
         }).then(() => {
-            alert("Résultats envoyés à M.Antoine ;) !");
+            alert("Résultats envoyés avec succès !");
         }).catch(err => {
             alert("Erreur d'envoi. Vérifie ton URL.");
         });
@@ -264,6 +503,7 @@ function drawTriangle(svg, rot, a, b, c, L, hasRightAngle = true) {
         <text x="${(xB+xC)/2+15}" y="${(yB+yC)/2-10}" class="measure-text" transform="rotate(${-rot},${(xB+xC)/2+15},${(yB+yC)/2-10})">${c==='?'?'?':c+' cm'}</text>`;
     svg.innerHTML = ''; svg.appendChild(group);
 }
+
 generateSheet();
 </script>
 </body>
